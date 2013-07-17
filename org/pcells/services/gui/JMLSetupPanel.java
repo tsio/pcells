@@ -26,37 +26,37 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
    public JMLSetupPanel( String name , Preferences pref ){
 
       setLayout( new BorderLayout(10,10) ) ;
-      
+
       _addressPanel = new AddressPanel(  name , pref.node("Addresses") ) ;
       _modulePanel  = new ModulePanel(   name , pref.node("Modules") ) ;
       _plugPanel    = new PlugPanel(     name , pref.node("Pluggins") ) ; ;
-   
+
       CellGuiSkinHelper.setComponentProperties( _tabbed ) ;
 
       _tabbed.addTab( "Addresses" , _addressPanel ) ;
       _tabbed.addTab( "Modules"   , _modulePanel  ) ;
       _tabbed.addTab( "Pluggins"  , _plugPanel    ) ;
-      
+
       add( _tabbed , "Center" ) ;
-      
+
       JPanel lastLine    = new CellGuiSkinHelper.CellPanel( new BorderLayout( 5,5 ) ) ;
       JPanel leftButtons = new CellGuiSkinHelper.CellPanel( new GridLayout(0,2) ) ;
-      
+
       leftButtons.add( _apply ) ;
       leftButtons.add( _reset ) ;
-      
+
       lastLine.add( leftButtons , "West" ) ;
       lastLine.add(_label , "Center" ) ;
       lastLine.add( _quit , "East" ) ;
-      
-      
+
+
       add( lastLine , "South" ) ;
-      
+
       _apply.addActionListener(this);
       _reset.addActionListener(this);
       _quit.addActionListener(this);
-      
-      
+
+
       _label.setForeground( Color.red ) ;
    }
 //   public void addActionListener( ActionListener listener ){
@@ -96,10 +96,10 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
       public void reset() throws Exception  ;
       public void apply() throws Exception  ;
    }
-   private class AddressPanel 
+   private class AddressPanel
            extends CellGuiSkinHelper.CellPanel
            implements Applyable, ActionListener {
-   
+
       private JLabel _hostLabel   = new JLabel( "Hostname" , JLabel.RIGHT ) ;
       private JLabel _portLabel   = new JLabel( "Portnumber" , JLabel.RIGHT ) ;
       private JLabel _loginLabel  = new JLabel( "Login Name" , JLabel.RIGHT ) ;
@@ -113,7 +113,7 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
       private ButtonGroup   _protocol = new ButtonGroup() ;
       private String        _protocolName = "ssh1" ;
       private Preferences _preferences = null ;
-      
+
       public Insets getInsets(){ return new Insets(20,20,20,20) ; }
       public void reset()  throws Exception {
          loadPreferences();
@@ -132,13 +132,13 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
          try{
             portnumber = Integer.parseInt(port);
          }catch(Exception eee ){
-            throw new 
+            throw new
             IllegalArgumentException("Port Number not an integer");
          }
          if( ( portnumber < 0 ) || ( portnumber > 0x10000 ) )
             throw new
             IllegalArgumentException("Port number not in range (0...5000)");
-            
+
          storePreferences() ;
       }
       private void loadPreferences() throws Exception {
@@ -166,15 +166,15 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
          _preferences.put( "portnumber" , _port.getText() ) ;
          _preferences.put( "loginname"  , _login.getText() ) ;
          _preferences.put( "protocol"    , _protocolName ) ;
-         
+
          _preferences.sync();
       }
       private AddressPanel( String name , Preferences pref ){
-      
+
          _preferences = pref ;
 
          setLayout( new GridBagLayout() ) ;
-         
+
          CellGuiSkinHelper.setComponentProperties( _raw ) ;
          CellGuiSkinHelper.setComponentProperties( _ssh1 ) ;
          CellGuiSkinHelper.setComponentProperties( _ssh2 ) ;
@@ -183,56 +183,55 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
          CellGuiSkinHelper.setComponentProperties( _protocolLabel ) ;
          CellGuiSkinHelper.setComponentProperties( _loginLabel ) ;
          setBorder(
-            BorderFactory.createTitledBorder(" Cell Login Addresses ") 
+            BorderFactory.createTitledBorder(" Cell Login Addresses ")
          );
          GridBagConstraints c = new GridBagConstraints()  ;
          c.gridheight = 1 ;
          c.insets     = new Insets(4,4,4,4) ;
-      
+
          c.gridwidth  = 1 ; c.gridx = 0 ; c.gridy = 0 ; c.weightx  =  0.0 ;
          c.fill       = GridBagConstraints.NONE ;
-         add( _loginLabel , c ) ; 
+         add( _loginLabel , c ) ;
          c.gridwidth  = 3 ; c.gridx = 1 ; c.gridy = 0 ; c.weightx  =  1.0 ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _login , c ) ;
-         
+
          c.gridwidth  = 1 ; c.gridx = 0 ; c.gridy = 1 ;
          c.fill       = GridBagConstraints.NONE ;
-         add( _hostLabel , c ) ; 
+         add( _hostLabel , c ) ;
          c.gridwidth  = 3 ; c.gridx = 1 ; c.gridy = 1 ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _host , c ) ;
-         
+
          c.gridwidth  = 1 ; c.gridx = 0 ; c.gridy = 2 ;
          c.fill       = GridBagConstraints.NONE ;
-         add( _portLabel , c ) ; 
+         add( _portLabel , c ) ;
          c.gridwidth  = 3 ; c.gridx = 1 ; c.gridy = 2 ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _port , c ) ;
-         
+
          c.gridwidth  = 1 ; c.gridx = 0 ; c.gridy = 3 ;
-         add( _protocolLabel , c ) ; 
+         add( _protocolLabel , c ) ;
          c.gridwidth  = 1 ; c.gridx = 1 ; c.gridy = 3 ;
          add( _raw , c ) ;
          c.gridwidth  = 1 ; c.gridx = 2 ; c.gridy = 3 ;
          add( _ssh1 , c ) ;
          c.gridwidth  = 1 ; c.gridx = 3 ; c.gridy = 3 ;
          add( _ssh2 , c ) ;
-         
+
          _protocol.add( _raw ) ;
          _protocol.add( _ssh1 ) ;
          _protocol.add( _ssh2 ) ;
-         
+
          _raw.addActionListener(this);
          _ssh1.addActionListener(this);
          _ssh2.addActionListener(this);
          _raw.setActionCommand("raw");
          _ssh1.setActionCommand("ssh1");
          _ssh2.setActionCommand("ssh2");
-         _ssh2.setEnabled( false ) ;
-
-/*         
-         _lm.addActionListener( 
+         
+/*
+         _lm.addActionListener(
             new ActionListener(){
                 public void actionPerformed( ActionEvent event ){
                    boolean selected = _lm.isSelected() ;
@@ -241,7 +240,7 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
                 }
             }
          ) ;
-*/         
+*/
          try{
             loadPreferences() ;
          }catch(Exception ee){
@@ -252,9 +251,9 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
          _protocolName = event.getActionCommand() ;
       }
    }
-   private class ModulePanel extends CellGuiSkinHelper.CellPanel  
+   private class ModulePanel extends CellGuiSkinHelper.CellPanel
            implements Applyable , ActionListener, KeyListener  {
-   
+
       private class ModulePanelEntry {
          private String _moduleName   = "" ;
          private String _moduleClass  = "" ;
@@ -321,7 +320,7 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
           String [] children = _preferences.childrenNames();
           for( int i = 0 , n = children.length ; i < n ; i++ )
               _preferences.node(children[i]).removeNode();
-              
+
           Iterator i = list.iterator() ;
           for( int position = 0 ; i.hasNext() ; position++ ){
              ModulePanelEntry entry = (ModulePanelEntry)i.next() ;
@@ -348,76 +347,76 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
          _preferences = pref ;
          setLayout( new GridBagLayout() ) ;
          setBorder(
-            BorderFactory.createTitledBorder(" Cell Login Modules ") 
+            BorderFactory.createTitledBorder(" Cell Login Modules ")
          );
-         
+
          GridBagConstraints c = new GridBagConstraints()  ;
          c.gridheight = 1 ;
          c.insets     = new Insets(4,4,4,4) ;
-      
+
          c.gridx = 0 ; c.gridy = 0 ; c.weightx  =  0.0 ;
          c.gridwidth  = 1 ;
-         c.fill       = GridBagConstraints.NONE ;         
-         add( _nameLabel , c ) ; 
-         
+         c.fill       = GridBagConstraints.NONE ;
+         add( _nameLabel , c ) ;
+
          c.gridx = 1 ; c.gridy = 0 ; c.weightx  =  1.0 ;
-         c.gridwidth  = 2 ;         
+         c.gridwidth  = 2 ;
          c.fill       = GridBagConstraints.NONE ;
          add( _name , c ) ;
-         
+
          c.gridx = 3 ; c.gridy = 0 ; c.weightx  =  0.0 ;
-         c.gridwidth  = GridBagConstraints.REMAINDER ;         
+         c.gridwidth  = GridBagConstraints.REMAINDER ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _positionLabel , c ) ;
-      
+
 
          c.gridx = 0 ; c.gridy = 1 ; c.weightx  =  0.0 ;
          c.gridwidth  = 1 ;
-         c.fill       = GridBagConstraints.NONE ;         
-         add( _classLabel , c ) ; 
-         
+         c.fill       = GridBagConstraints.NONE ;
+         add( _classLabel , c ) ;
+
          c.gridx = 1 ; c.gridy = 1 ; c.weightx  =  1.0 ;
-         c.gridwidth  = GridBagConstraints.REMAINDER ;         
+         c.gridwidth  = GridBagConstraints.REMAINDER ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _class , c ) ;
-      
+
          c.gridx = 0 ; c.gridy = 2 ; c.weightx  =  0.0 ;
          c.gridwidth  = 1 ;
-         c.fill       = GridBagConstraints.NONE ;         
-         add( _loaderLabel , c ) ; 
-         
+         c.fill       = GridBagConstraints.NONE ;
+         add( _loaderLabel , c ) ;
+
          c.gridx = 1 ; c.gridy = 2 ; c.weightx  =  1.0 ;
-         c.gridwidth  = GridBagConstraints.REMAINDER ;         
+         c.gridwidth  = GridBagConstraints.REMAINDER ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _loader , c ) ;
-         
+
          c.gridx = 0 ; c.gridy = 3 ; c.weightx  =  1.0 ;
          c.gridwidth  = 1 ;
-         c.fill       = GridBagConstraints.HORIZONTAL ;         
-         add( _previous , c ) ; 
-         
+         c.fill       = GridBagConstraints.HORIZONTAL ;
+         add( _previous , c ) ;
+
          c.gridx = 1 ; c.gridy = 3 ; c.weightx  =  1.0 ;
-         c.gridwidth  = 1 ;         
+         c.gridwidth  = 1 ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _next , c ) ;
-          
+
          c.gridx = 2 ; c.gridy = 3 ; c.weightx  =  1.0 ;
-         c.gridwidth  = 1 ;         
+         c.gridwidth  = 1 ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _insert , c ) ;
-          
+
          c.gridx = 3 ; c.gridy = 3 ; c.weightx  =  1.0 ;
-         c.gridwidth  = 1 ;         
+         c.gridwidth  = 1 ;
          c.fill       = GridBagConstraints.HORIZONTAL ;
          add( _delete , c ) ;
          _delete.setForeground(Color.red);
-         
+
          _loader.setText("CLASSPATH");
          _loader.setEnabled(false);
-         
+
          _loaderLabel.setEnabled(false);
-         
-         
+
+
          java.util.List loadedList  = new ArrayList() ;
          java.util.List defaultList = new ArrayList() ;
          try{
@@ -426,7 +425,7 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
             System.err.println("can't load preferences : "+ee);
          }
          loadDefault(defaultList);
-         
+
          if( mergeLists(  loadedList , defaultList , _list ) ){
             try{
                saveList( _list ) ;
@@ -434,9 +433,9 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
                System.err.println("can't save preferences : "+ee);
             }
          }
-         
+
          _currentPosition = 0 ;
-         
+
          _delete.addActionListener(this);
          _insert.addActionListener(this) ;
          _next.addActionListener(this) ;
@@ -444,22 +443,22 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
 //         _name.addKeyListener(this);
 //         _class.addKeyListener(this) ;
 //         _loader.addKeyListener(this) ;
-         
+
          go() ;
       }
       private boolean mergeLists( java.util.List loaded , java.util.List def , java.util.List result ){
          Map map = new HashMap() ;
          boolean modified = false ;
-         
+
          for( Iterator i = def.iterator() ; i.hasNext() ; ){
              ModulePanelEntry entry = (ModulePanelEntry)i.next() ;
              map.put( entry.getName() , entry ) ;
-         }         
+         }
          for( Iterator i = loaded.iterator() ; i.hasNext() ; ){
-         
+
              ModulePanelEntry entry    = (ModulePanelEntry)i.next() ;
              ModulePanelEntry defentry = (ModulePanelEntry)map.get(entry.getName());
-             
+
              if( defentry != null ){
                 if( ! entry.equals(defentry) ){
                     modified = true ;
@@ -519,7 +518,7 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
              deleteCurrent() ;
           }
            go() ;
-       
+
         }else if( source == _insert ){
           if( updateCurrent() ){
              ModulePanelEntry entry = new ModulePanelEntry() ;
@@ -551,12 +550,12 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
             _next.setEnabled(true) ;
          }else if( _currentPosition == (size - 1 ) ){
             _previous.setEnabled(true);
-            _next.setEnabled(false) ;         
+            _next.setEnabled(false) ;
          }else{
             _previous.setEnabled(true);
             _next.setEnabled(true) ;
          }
-         
+
       }
       private String [][] _defaultPluggins = {
          { "Commander"  , "org.pcells.services.gui.XCommander"         , "CLASSPATH" } ,
@@ -572,7 +571,7 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
               entry._moduleName   = x[0] ;
               entry._moduleClass  = x[1] ;
               entry._moduleLoader = x[2] ;
-              list.add( entry ) ;          
+              list.add( entry ) ;
           }
       }
       private void loadDefault2( java.util.List list ){
@@ -594,11 +593,11 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
       }
    }
    private class PlugPanel extends CellGuiSkinHelper.CellPanel  implements Applyable {
-   
+
       private JLabel _nameLabel    = new JLabel( "Not yet supported" , JLabel.CENTER ) ;
-      
+
       private Preferences _preferences = null ;
-      
+
       public Insets getInsets(){ return new Insets(20,20,20,20) ; }
       public void reset() throws Exception {
          System.out.println("Cancelled");
@@ -609,15 +608,15 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
          _preferences = pref ;
          setLayout( new GridBagLayout() ) ;
          setBorder(
-            BorderFactory.createTitledBorder(" JCommand Pluggin Setup ") 
+            BorderFactory.createTitledBorder(" JCommand Pluggin Setup ")
          );
-         
+
            GridBagConstraints c = new GridBagConstraints()  ;
            c.gridheight = 1 ;
            c.insets     = new Insets(4,4,4,4) ;
 
            c.gridx = 0 ; c.gridy = 0 ; c.weightx  =  1.0 ;
-           c.gridwidth  = GridBagConstraints.REMAINDER ;         
+           c.gridwidth  = GridBagConstraints.REMAINDER ;
            c.fill       = GridBagConstraints.HORIZONTAL ;
 
          ClassLoader loader = this.getClass().getClassLoader() ;
@@ -653,6 +652,6 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
    public void processEvent( ActionEvent e) {
       if( _actionListener != null)
         _actionListener.actionPerformed( e );
-   }         
+   }
 
 }

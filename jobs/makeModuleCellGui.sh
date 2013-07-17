@@ -13,7 +13,14 @@ CLASSES=${OUR_HOME}/classes
 EXTRAS=${OUR_HOME}/extras
 CELLS=${OUR_HOME}/classes/cells.jar
 DCACHE=${OUR_HOME}/classes/dcache.jar
-CLASSPATH=${CELLS}:${DCACHE}:${OUR_HOME}
+SSHD=${OUR_HOME}/classes/sshd-core-0.6.0.jar
+MINACORE=${OUR_HOME}/classes/mina-core-2.0.4.jar
+SLF4J=${OUR_HOME}/classes/slf4j-api-1.6.4.jar
+BCPROV=${OUR_HOME}/classes/bcprov-jdk16-1.46.jar
+TOMCAT=${OUR_HOME}/classes/tomcat-embed-core-7.0.26.jar
+A_COMMONS=${OUR_HOME}/classes/commons-collections-3.2.1.jar
+jzlib=${OUR_HOME}/classes/jzlib-1.1.1.jar
+CLASSPATH=${CELLS}:${DCACHE}:${SSHD}:${MINACORE}:${SLF4J}:${BCPROV}::${TOMCAT}::${jzlib}:${A_COMMONS}:${OUR_HOME}
 DIST=${OUR_HOME}/dist/pcells
 VERSIONFILE=${OUR_HOME}/docs/help/version
 #
@@ -36,17 +43,46 @@ echo "Setting version to $THISVERSION"
 #sed 's/OURGUIVERSION/$THISVERSION/' <JMultiLogin.java >JMultiLogin.java.copy
 #cp JMultiLogin.java
 #
+printf "Deleting all *.class files under  org/... "
+find org -name "*.class" -exec rm {} \;
+#
 echo "Compiling 'org'"
+javac -version
 #
 # DETAILS=-Xlint:deprecation
 #
-javac $TARGET $DETAILS  `find org -name "*.java"`
+javac -g:source,lines,vars $TARGET $DETAILS  `find org -name "*.java"`
 [ $? -ne 0 ] && exit 4
+#
+jarName=cells
+printf "Recreating ${jarName}.jar ... "
+#
+echo ""
+printf "Unpacking cells.jar ... "
+###############################################
+# Changing Directory here ....   ##############
+###############################################
+cd ${CLASSES}
+jar xf ${jarName}.jar
+[ $? -ne 0 ] && problem 3 "Failed"
+echo " Done"
+#
+printf "Packing cells.jar ... "
+cp ../org/pcells/services/connection/*.class org/pcells/services/connection/ 
+jar cf ${jarName}.jar org/pcells/services/connection/*.class `find dmg/ -name *.class`
+[ $? -ne 0 ] && problem 3 "Failed"
+echo " Done"
+rm -rf dmg org META-INF
+###############################################
+# Comming back ....   ##############
+###############################################
+cd -
+#
 #
 echo "Preparing Distribution"
 rm -rf ${DIST}
 mkdir ${DIST}
-cp ${CLASSES}/cells*.jar ${CLASSES}/dcache*.jar ${CLASSES}/log*.jar ${DIST}
+cp ${CLASSES}/commons-collections-3.2.1.jar ${CLASSES}/jzlib-1.1.1.jar ${CLASSES}/tomcat-embed-core-7.0.26.jar ${CLASSES}/bcprov-jdk16-1.46.jar ${CLASSES}/slf4j-api-1.6.4.jar ${CLASSES}/slf4j-api-1.6.4.jar ${CLASSES}/mina-core-2.0.4.jar  ${CLASSES}/sshd-core-0.6.0.jar ${CLASSES}/cells*.jar ${CLASSES}/dcache*.jar ${CLASSES}/log*.jar ${DIST}
 cp ${jobs}/YCommander.plugins ${DIST}
 cp ${jobs}/MonitoringPanel.plugins ${DIST}
 cp ${jobs}/to-kde3-desktop.sh ${DIST}
@@ -57,7 +93,7 @@ if [ -d "${EXTRAS}" ] ; then cp ${EXTRAS}/* ${DIST} ; fi
 #
 jarName=org.pcells
 #
-printf "Creating JAR ${jarName} ... "
+printf "reating JAR ${jarName} ... "
 jar cmf ${jobs}/manifest.${jarName} ${DIST}/${jarName}.jar  org/pcells/util/*.class \
           images/sheep*.png \
           images/cells-logo.jpg \
