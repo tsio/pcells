@@ -1,0 +1,2 @@
+Main-Class: org.pcells.services.gui.JMultiLogin
+Class-Path: dcache.jar cells.jar dcache-pluggin.jar
