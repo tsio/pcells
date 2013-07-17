@@ -8,14 +8,21 @@ TARGET="-target 1.5 -source 1.5"
 usePsu=true
 required=${jobs}/requiredFromDmg.list
 cd ${OUR_HOME}
-export CLASSPATH
 CLASSES=${OUR_HOME}/classes
 EXTRAS=${OUR_HOME}/extras
-CELLS=${OUR_HOME}/classes/cells.jar
+CELLS=${OUR_HOME}/classes/cells190.jar
 DCACHE=${OUR_HOME}/classes/dcache.jar
-CLASSPATH=${CELLS}:${DCACHE}:${OUR_HOME}
+SSHD=${OUR_HOME}/classes/sshd-core-0.8.0.jar
+MINACORE=${OUR_HOME}/classes/mina-core-2.0.4.jar
+SLF4J=${OUR_HOME}/classes/slf4j-api-1.6.4.jar
+BCPROV=${OUR_HOME}/classes/bcprov-jdk15-140.jar
+TOMCAT=${OUR_HOME}/classes/tomcat-embed-core-7.0.26.jar
+A_COMMONS=${OUR_HOME}/classes/commons-collections-3.2.1-1.0.0.jar
+jzlib=${OUR_HOME}/classes/jzlib-1.1.1.jar
+CLASSPATH=${CELLS}:${DCACHE}:${SSHD}:${MINACORE}:${SLF4J}:${BCPROV}::${TOMCAT}::${jzlib}:${A_COMMONS}:${OUR_HOME}
 DIST=${OUR_HOME}/dist/pcells
 VERSIONFILE=${OUR_HOME}/docs/help/version
+export CLASSPATH
 #
 problem (){
    echo "$2"
@@ -36,17 +43,46 @@ echo "Setting version to $THISVERSION"
 #sed 's/OURGUIVERSION/$THISVERSION/' <JMultiLogin.java >JMultiLogin.java.copy
 #cp JMultiLogin.java
 #
+printf "Deleting all *.class files under  org/... "
+find org -name "*.class" -exec rm {} \;
+#
 echo "Compiling 'org'"
+javac -version
 #
 # DETAILS=-Xlint:deprecation
 #
-javac $TARGET $DETAILS  `find org -name "*.java"`
+javac -g:source,lines,vars $TARGET $DETAILS  `find org -name "*.java"`
 [ $? -ne 0 ] && exit 4
+#
+jarName=cells190
+printf "Recreating ${jarName}.jar ... "
+#
+echo ""
+printf "Unpacking cells.jar ... "
+###############################################
+# Changing Directory here ....   ##############
+###############################################
+cd ${CLASSES}
+jar xf ${jarName}.jar
+[ $? -ne 0 ] && problem 3 "Failed"
+echo " Done"
+#
+printf "Packing cells.jar ... "
+cp ../org/pcells/services/connection/*.class org/pcells/services/connection/ 
+jar cf ${jarName}.jar org/pcells/services/connection/*.class `find dmg/ -name *.class`
+[ $? -ne 0 ] && problem 3 "Failed"
+echo " Done"
+rm -rf dmg org META-INF
+###############################################
+# Comming back ....   ##############
+###############################################
+cd -
+#
 #
 echo "Preparing Distribution"
 rm -rf ${DIST}
 mkdir ${DIST}
-cp ${CLASSES}/cells*.jar ${CLASSES}/dcache*.jar ${CLASSES}/log*.jar ${DIST}
+cp ${CLASSES}/*.jar ${DIST}
 cp ${jobs}/YCommander.plugins ${DIST}
 cp ${jobs}/MonitoringPanel.plugins ${DIST}
 cp ${jobs}/to-kde3-desktop.sh ${DIST}

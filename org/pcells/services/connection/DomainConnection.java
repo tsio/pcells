@@ -1,22 +1,17 @@
-package org.pcells.services.connection ;
+package org.pcells.services.connection;
 
-import  java.io.* ;
+import java.io.IOException;
 
 public interface DomainConnection {
-
-    public String getAuthenticatedUser(); 
-
-    public int sendObject( Object obj , 
-                           DomainConnectionListener listener ,
-                           int id 
-                         ) throws IOException ;
-    public int sendObject( String destination ,
-                           Object obj , 
-                           DomainConnectionListener listener ,
-                           int id 
-                         ) throws IOException ;
-
-    public void addDomainEventListener( DomainEventListener listener ) ;
-    public void removeDomainEventListener( DomainEventListener listener ) ;
-
-} 
+    String getAuthenticatedUser();
+    int sendObject(Object obj,
+                   DomainConnectionListener listener,
+                   int id) throws IOException;
+    int sendObject(String destination,
+                   Object obj,
+                   DomainConnectionListener listener,
+                   int id) throws IOException;
+    void addDomainEventListener(DomainEventListener listener);
+    void removeDomainEventListener(DomainEventListener listener);
+    void close() throws IOException;
+}
