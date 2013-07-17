@@ -1,7 +1,0 @@
-Main-Class: org.pcells.services.gui.JMultiLogin
-pcells-gui-jar-name: pcells-gui-flush
-pcells-gui-jar-version: 1.1.1
-pcells-gui-jar-help: FlushManager:/docs/help/help-dcache-flush.idx
-pcells-gui-module-name-0: FlushManager
-pcells-gui-module-class-0: org.dcache.gui.pluggins.flush.JFlushControlPanel
-pcells-gui-module-position-0: 500
