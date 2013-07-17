@@ -1,0 +1,6 @@
+Main-Class: org.pcells.services.gui.JMultiLogin
+pcells-gui-jar-name: pcells-gui-drives
+pcells-gui-jar-version: 1.1.1
+pcells-gui-module-name-0: DriveWatch
+pcells-gui-module-class-0: org.dcache.gui.pluggins.drives.JTapeDriveWatchPanel
+pcells-gui-module-position-0: 600
