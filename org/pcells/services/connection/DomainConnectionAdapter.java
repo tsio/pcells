@@ -3,7 +3,8 @@
 package org.pcells.services.connection;
 //
 import java.io.BufferedReader;
-import java.io.FilterInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,14 +16,15 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import dmg.cells.applets.login.DomainObjectFrame;
-import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.bouncycastle.util.io.TeeInputStream;
 
 /**
  */
@@ -81,34 +83,9 @@ public class DomainConnectionAdapter implements DomainConnection {
         _objOut.close();
     }
 
-    private static class MyFilter extends FilterInputStream {
-
-        public MyFilter(InputStream in) {
-            super(in);
-        }
-
-        public int read() throws IOException {
-            int r = super.read();
-            return r;
-        }
-
-        public int read(byte[] data, int offset, int len) throws IOException {
-            int r = super.read(data, offset, 1);
-            return r;
-        }
-
-        public int read(byte[] data) throws IOException {
-
-            byte[] x = new byte[1];
-            int r = super.read(x);
-            data[0] = x[0];
-            return r;
-        }
-    }
-
     private void runConnection() throws IOException {
 
-        InputStream inputstream = new MyFilter(_inputStream);
+        InputStream inputstream = _inputStream;
         BufferedReader reader = new BufferedReader(
                 _reader == null
                 ? new InputStreamReader(inputstream)
@@ -129,24 +106,15 @@ public class DomainConnectionAdapter implements DomainConnection {
             System.out.println("This was read from the InputStream: "+ check);
 
         } while (!check.equals("$BINARY$"));
-        _objOut = new ObjectOutputStream(new BufferedOutputStream(_outputStream));
+        _objOut = new ObjectOutputStream(_outputStream);
         _objOut.flush();
         Calendar calendar = Calendar.getInstance();
         Date currentTimestamp = new Timestamp(calendar.getTime().getTime());
         System.out.println(currentTimestamp.toString() + " Flushed ObjectOutputStream Opening object streams.");
         try {
             assert inputstream != null;
-            OutputStream branchStream = new OutputStream() {
-				
-				@Override
-				public void write(int b) throws IOException {
-					System.out.println("Input DomainConnectionAdapter: "+ b);					
-				}
-			};
-            TeeInputStream teeIn = new TeeInputStream(inputstream, branchStream);
-            System.out.println("Created TeeInputStream");
 //            BufferedInputStream bufStream = new BufferedInputStream(teeIn);
-            _objIn = new ObjectInputStream(teeIn);
+            _objIn = new ObjectInputStream(inputstream);
             System.out.println("Created ObjectStreams.");
         } catch (Exception e) {
             writeToFile("Exception while creating ObjectInputStream: "+e.toString());
