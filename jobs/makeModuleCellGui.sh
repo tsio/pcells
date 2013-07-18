@@ -11,7 +11,7 @@ cd ${OUR_HOME}
 export CLASSPATH
 CLASSES=${OUR_HOME}/classes
 EXTRAS=${OUR_HOME}/extras
-CELLS=${OUR_HOME}/classes/cells.jar
+CELLS=${OUR_HOME}/classes/cells190.jar
 DCACHE=${OUR_HOME}/classes/dcache.jar
 SSHD=${OUR_HOME}/classes/sshd-core-0.8.0.jar
 MINACORE=${OUR_HOME}/classes/mina-core-2.0.4.jar
@@ -54,7 +54,7 @@ javac -version
 javac -g:source,lines,vars $TARGET $DETAILS  `find org -name "*.java"`
 [ $? -ne 0 ] && exit 4
 #
-jarName=cells
+jarName=cells190
 printf "Recreating ${jarName}.jar ... "
 #
 echo ""
@@ -82,7 +82,7 @@ cd -
 echo "Preparing Distribution"
 rm -rf ${DIST}
 mkdir ${DIST}
-cp ${CLASSES}/commons-collections-3.2.1.jar ${CLASSES}/jzlib-1.1.1.jar ${CLASSES}/tomcat-embed-core-7.0.26.jar ${CLASSES}/bcprov-jdk16-1.46.jar ${CLASSES}/slf4j-api-1.6.4.jar ${CLASSES}/slf4j-api-1.6.4.jar ${CLASSES}/mina-core-2.0.4.jar  ${CLASSES}/sshd-core-0.6.0.jar ${CLASSES}/cells*.jar ${CLASSES}/dcache*.jar ${CLASSES}/log*.jar ${DIST}
+cp ${CLASSES}/*.jar ${DIST}
 cp ${jobs}/YCommander.plugins ${DIST}
 cp ${jobs}/MonitoringPanel.plugins ${DIST}
 cp ${jobs}/to-kde3-desktop.sh ${DIST}
