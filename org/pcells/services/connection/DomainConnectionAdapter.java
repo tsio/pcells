@@ -3,8 +3,6 @@
 package org.pcells.services.connection;
 //
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -72,7 +70,7 @@ public class DomainConnectionAdapter implements DomainConnection {
             System.out.println("runReceiver starting");
             runReceiver();
         } catch (Throwable e) {
-            writeToFile("Exception caught:"+e.toString());
+            e.printStackTrace();
         } finally {
             System.out.println("runReceiver finished");
             informListenersClosed();
@@ -98,47 +96,20 @@ public class DomainConnectionAdapter implements DomainConnection {
         writer.println("$BINARY$");
         writer.flush();
         System.out.println("Wrote Binary");
-        writeToFile("Wrote Binary");
-        String check = null;
+        String check;
         do {
-
             check = reader.readLine();
             System.out.println("This was read from the InputStream: "+ check);
-
         } while (!check.equals("$BINARY$"));
         _objOut = new ObjectOutputStream(_outputStream);
         _objOut.flush();
         Calendar calendar = Calendar.getInstance();
         Date currentTimestamp = new Timestamp(calendar.getTime().getTime());
         System.out.println(currentTimestamp.toString() + " Flushed ObjectOutputStream Opening object streams.");
-        try {
-            assert inputstream != null;
+        assert inputstream != null;
 //            BufferedInputStream bufStream = new BufferedInputStream(teeIn);
-            _objIn = new ObjectInputStream(inputstream);
-            System.out.println("Created ObjectStreams.");
-        } catch (Exception e) {
-            writeToFile("Exception while creating ObjectInputStream: "+e.toString());
-        }
-    }
-
-    private void writeToFile(String s) {
-        File f = new File("/tmp/debugOutput");
-        if (!f.exists()) {
-            try {
-                f.createNewFile();
-            } catch (IOException e) {
-                System.out.println("File could not be created.");
-            }
-        }
-        try {
-            FileWriter fr = new FileWriter(f);
-            fr = (FileWriter) fr.append(s);
-            fr = (FileWriter) fr.append("\n");
-            fr.flush();
-            fr.close();
-        } catch (IOException ex) {
-            System.out.println("Exception: "+ ex);
-        }
+        _objIn = new ObjectInputStream(inputstream);
+        System.out.println("Created ObjectStreams.");
     }
 
     private void runReceiver() throws Exception {
