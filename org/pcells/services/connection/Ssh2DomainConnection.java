@@ -2,22 +2,33 @@
 //
 package org.pcells.services.connection;
 //
-import dmg.protocols.ssh.*;
-import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.Queue;
-import java.util.Scanner;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
-import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.ClientChannel;
 import org.apache.sshd.ClientSession;
 import org.apache.sshd.SshClient;
 import org.apache.sshd.client.future.AuthFuture;
+import org.apache.sshd.client.future.ConnectFuture;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
+
+import dmg.protocols.ssh.SshAuthMethod;
+import dmg.protocols.ssh.SshAuthPassword;
+import dmg.protocols.ssh.SshAuthRsa;
+import dmg.protocols.ssh.SshClientAuthentication;
+import dmg.protocols.ssh.SshRsaKey;
+import dmg.protocols.ssh.SshSharedKey;
 
 /**
  */
@@ -66,7 +77,7 @@ public class Ssh2DomainConnection
             System.out.println("Ssh2 AuthFuture: " + authFuture);
             if (authFuture != null) {
                 if (authFuture.isSuccess()) {
-                    ClientChannel channel = _session.createShellChannel();
+                    ClientChannel channel = _session.createSubsystemChannel("pcells");
                     // Connecting streams of sshClient and DomainConnectionAdapter
                     PipedOutputStream guiOutputStream = new PipedOutputStream();
                     PipedInputStream clientInputStream = new PipedInputStream();
@@ -76,20 +87,32 @@ public class Ssh2DomainConnection
                     clientOutputStream.connect(guiInputStream);
                     channel.setIn(clientInputStream);
                     channel.setOut(clientOutputStream);
-                    channel.setErr(new OutputStream() {
-
+                    channel.setErr(new OutputStream()
+                    {
                         @Override
-                        public void write(int b) throws IOException {
+                        public void write(int b) throws IOException
+                        {
                             throw new UnsupportedOperationException("Not supported yet.");
                         }
                     });
                     channel.open().await();
-                    setIoStreams(
-                            guiInputStream,
-                            guiOutputStream,
-                            new InputStreamReader(guiInputStream),
-                            new OutputStreamWriter(guiOutputStream));
-                    super.go();
+
+                    _objOut = new ObjectOutputStream(guiOutputStream);
+                    _objOut.flush();
+                    Calendar calendar = Calendar.getInstance();
+                    Date currentTimestamp = new Timestamp(calendar.getTime().getTime());
+                    System.out.println(currentTimestamp.toString() + " Flushed ObjectOutputStream Opening object streams.");
+                    _objIn = new ObjectInputStream(guiInputStream);
+
+                    try {
+                        informListenersOpened();
+                        runReceiver();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    } finally {
+                        informListenersClosed();
+                    }
+
                     int channelReturn = channel.waitFor(ClientChannel.CLOSED, 0);
                     if (channelReturn == ClientChannel.EXIT_SIGNAL) _session.close(true);
                 }

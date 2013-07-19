@@ -37,8 +37,8 @@ public class DomainConnectionAdapter implements DomainConnection {
     private OutputStream _outputStream = null;
     private Reader _reader = null;
     private Writer _writer = null;
-    private ObjectOutputStream _objOut = null;
-    private ObjectInputStream _objIn = null;
+    protected ObjectOutputStream _objOut = null;
+    protected ObjectInputStream _objIn = null;
 
     public String getAuthenticatedUser() {
         return "Unknown";
@@ -112,7 +112,7 @@ public class DomainConnectionAdapter implements DomainConnection {
         System.out.println("Created ObjectStreams.");
     }
 
-    private void runReceiver() throws Exception {
+    protected void runReceiver() throws Exception {
 
         Object obj = null;
         DomainObjectFrame frame = null;
@@ -201,7 +201,7 @@ public class DomainConnectionAdapter implements DomainConnection {
         }
     }
 
-    private void informListenersOpened() {
+    protected void informListenersOpened() {
         List<DomainEventListener> array = new ArrayList<DomainEventListener>(_listener);
         synchronized (_ioLock) {
             _connected = true;
@@ -216,7 +216,7 @@ public class DomainConnectionAdapter implements DomainConnection {
         }
     }
 
-    private void informListenersClosed() {
+    protected void informListenersClosed() {
         List<DomainEventListener> array = new ArrayList<DomainEventListener>(_listener);
         synchronized (_ioLock) {
             _connected = false;
