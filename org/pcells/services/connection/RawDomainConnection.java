@@ -2,16 +2,12 @@
 //
 package org.pcells.services.connection ;
 //
-import java.util.*;
-import java.io.* ;
 import java.net.* ;
-import org.pcells.services.connection.DomainConnection ;
-import org.pcells.services.connection.DomainConnectionListener ;
-import org.pcells.services.connection.DomainEventListener ;
-import dmg.cells.applets.login.DomainObjectFrame ;
+
 /**
  */
-public class RawDomainConnection extends DomainConnectionAdapter {
+public class RawDomainConnection extends ShellDomainConnection
+{
 
    private String _hostname   = null ;
    private int    _portnumber = 0 ;
@@ -22,21 +18,21 @@ public class RawDomainConnection extends DomainConnectionAdapter {
       _portnumber = portnumber ;
    }
    public void go() throws Exception {
-   
+
       _socket = new Socket( _hostname , _portnumber ) ;
       setIoStreams( _socket.getInputStream() , _socket.getOutputStream() ) ;
-      
+
       try{
          super.go() ;
       }finally{
          try{ _socket.close() ; }catch(Exception ee ){}
       }
-      
+
    }
-   private class RunConnection 
+   private class RunConnection
            implements Runnable, DomainConnectionListener, DomainEventListener {
-      
-        
+
+
       public RunConnection(  ) throws Exception {
          System.out.println("class runConnection init");
          addDomainEventListener(this);
@@ -59,7 +55,7 @@ public class RawDomainConnection extends DomainConnectionAdapter {
                 System.out.println("Exception in sendObject"+ee);
              }
           }
-      } 
+      }
       public void connectionOpened( DomainConnection connection ){
          System.out.println("DomainConnection : connectionOpened");
          try{
@@ -82,7 +78,7 @@ public class RawDomainConnection extends DomainConnectionAdapter {
    }
    public static void main( String [] args )throws Exception {
       if( args.length < 2 ){
-      
+
           System.err.println("Usage : <hostname> <portNumber>");
           System.exit(4);
       }

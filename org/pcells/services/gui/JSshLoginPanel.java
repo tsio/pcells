@@ -2,32 +2,45 @@
 //
 package org.pcells.services.gui ;
 //
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import java.util.*;
-import java.io.* ;
-import java.net.* ;
-import org.pcells.services.connection.DomainConnection ;
-import org.pcells.services.connection.DomainConnectionListener ;
-import org.pcells.services.connection.DomainEventListener ;
-import dmg.cells.applets.login.DomainObjectFrame ;
-import dmg.protocols.ssh.* ;
+import org.pcells.services.connection.DomainConnection;
+import org.pcells.services.connection.DomainConnectionListener;
+import org.pcells.services.connection.DomainEventListener;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
+
+import dmg.cells.applets.login.DomainObjectFrame;
+import dmg.protocols.ssh.SshAuthMethod;
+import dmg.protocols.ssh.SshAuthPassword;
+import dmg.protocols.ssh.SshAuthenticationException;
+import dmg.protocols.ssh.SshClientAuthentication;
+import dmg.protocols.ssh.SshRsaKey;
+import dmg.protocols.ssh.SshSharedKey;
+import dmg.protocols.ssh.SshStreamEngine;
 /**
  */
-public class      JSshLoginPanel 
-       extends    JLoginPanel 
+public class      JSshLoginPanel
+       extends    JLoginPanel
        implements SshClientAuthentication {
-       
+
    private SshDomainConnection _connection = new SshDomainConnection() ;
    private ObjectOutputStream _objOut = null ;
    private ObjectInputStream  _objIn  = null ;
    private Socket             _socket = null ;
    public DomainConnection getDomainConnection(){ return _connection ; }
    public JSshLoginPanel(){ this(null);}
-   public JSshLoginPanel( String name ){ 
-      super(name) ; 
+   public JSshLoginPanel( String name ){
+      super(name) ;
       addActionListener(
          new ActionListener(){
             public void actionPerformed( ActionEvent event ){
@@ -62,7 +75,7 @@ public class      JSshLoginPanel
             ee.printStackTrace();
             setErrorMessage("Connection Broken");
          }finally{
-            try{ _socket.close() ;}catch( Exception ce ){}      
+            try{ _socket.close() ;}catch( Exception ce ){}
             _connection.informListenersClosed() ;
             displayLoginPanel() ;
          }
@@ -79,7 +92,7 @@ public class      JSshLoginPanel
           writer.flush() ;
           String  check  = null ;
           do{
-             check = reader.readLine()   ;      
+             check = reader.readLine()   ;
           }while( ! check.equals( "$BINARY$" ) ) ;
           setMessage("Binary acknowledged");
           _objOut = new ObjectOutputStream( engine.getOutputStream() ) ;
@@ -115,25 +128,25 @@ public class      JSshLoginPanel
   }
   //===============================================================================
   //
-  //   domain connection interface 
-  //  
+  //   domain connection interface
+  //
   public class SshDomainConnection implements DomainConnection {
      private Hashtable _packetHash = new Hashtable() ;
-     private Object    _ioLock     = new Object() ; 
+     private Object    _ioLock     = new Object() ;
      private int       _ioCounter  = 100 ;
      private Vector    _listener   = new Vector() ;
      private boolean   _connected  = false ;
-     
+
      public String getAuthenticatedUser(){ return getLogin() ; }
-     
-     public int sendObject( Object obj , 
+
+     public int sendObject( Object obj ,
                             DomainConnectionListener listener ,
-                            int id 
+                            int id
                                                  ) throws IOException {
          System.out.println("Sending : "+obj ) ;
          synchronized( _ioLock ){
              if( ! _connected )throw new IOException( "Not connected" ) ;
-             DomainObjectFrame frame = 
+             DomainObjectFrame frame =
                      new DomainObjectFrame( obj , ++_ioCounter , id ) ;
              _objOut.writeObject( frame ) ;
              _objOut.reset() ;
@@ -142,14 +155,14 @@ public class      JSshLoginPanel
          }
      }
      public int sendObject( String destination ,
-                            Object obj , 
+                            Object obj ,
                             DomainConnectionListener listener ,
-                            int id 
+                            int id
                                                  ) throws IOException {
          System.out.println("Sending : "+obj ) ;
          synchronized( _ioLock ){
              if( ! _connected )throw new IOException( "Not connected" ) ;
-             DomainObjectFrame frame = 
+             DomainObjectFrame frame =
                      new DomainObjectFrame( destination , obj , ++_ioCounter , id ) ;
              _objOut.writeObject( frame ) ;
              _objOut.reset() ;
@@ -201,14 +214,18 @@ public class      JSshLoginPanel
            }
         }
      }
+
+      public void close()
+      {
+      }
   }
   //
   //
   /////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////
   //
-  //   Client Authentication interface 
-  //   
+  //   Client Authentication interface
+  //
   private int _requestCounter = 0 ;
   public boolean isHostKey( InetAddress host , SshRsaKey keyModulus ) {
 
@@ -226,15 +243,15 @@ public class      JSshLoginPanel
      System.out.println( "getUser : "+loginName ) ;
      return loginName ;
   }
-  public SshSharedKey  getSharedKey( InetAddress host ){ 
-     return null ; 
+  public SshSharedKey  getSharedKey( InetAddress host ){
+     return null ;
   }
 
-  public SshAuthMethod getAuthMethod(){  
+  public SshAuthMethod getAuthMethod(){
       String password = getPassword() ;
       System.out.println("getAuthMethod("+_requestCounter+") "+password) ;
-      return _requestCounter++ > 2 ? 
-             null : 
+      return _requestCounter++ > 2 ?
+             null :
              new SshAuthPassword( password) ;
   }
 }
