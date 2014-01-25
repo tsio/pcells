@@ -3,9 +3,9 @@
 <plist version="0.9">
 <dict>
 	<key>CFBundleName</key>
-	<string>pCells 1.5</string>
+	<string>pCells 2.0</string>
 	<key>CFBundleVersion</key>
-	<string>100.0</string>
+	<string>2.0.0</string>
 	<key>CFBundleAllowMixedLocalizations</key>
 	<string>true</string>
 	<key>CFBundleExecutable</key>
@@ -19,7 +19,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleIconFile</key>
-	<string>bird-red-gold.icns</string>
+	<string>bird-2.0.0.icns</string>
 	<key>Java</key>
 	<dict>
 		<key>MainClass</key>

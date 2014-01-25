@@ -31,7 +31,7 @@ problem (){
 #   compile our stuff
 #
 #
-THISVERSION=0.0
+THISVERSION=2.0
 if [ -f $VERSIONFILE ] ; then
   THISVERSION=`cat ${VERSIONFILE}`
 fi
