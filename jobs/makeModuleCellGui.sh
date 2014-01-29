@@ -159,7 +159,9 @@ fi
 #  prepare generic jar
 #
 cd ${DIST}/..
+rm -rf *.app
 rm -rf pcells.zip
+
 zip -r pcells pcells
 #
 # prepare Darwin .app.
@@ -169,7 +171,8 @@ echo "Creating Darwin .... "
 DARWINNAME=pcells-${THISVERSION}.app
 #
 rm -rf ${DARWINNAME}
-cp -R pcells.app ${DARWINNAME}
+cp -R ../org/pcells/app/pcells.app pcells.app
+cp -R ../org/pcells/app/pcells.app ${DARWINNAME}
 sed "s/THISVERSION/$THISVERSION/" <pcells.app/Contents/Info.plist >${DARWINNAME}/Contents/Info.plist
 cp pcells/* ${DARWINNAME}/Contents/Resources/Java/
 
