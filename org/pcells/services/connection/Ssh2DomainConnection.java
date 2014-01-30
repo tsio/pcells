@@ -8,6 +8,7 @@ import org.apache.sshd.ClientSession;
 import org.apache.sshd.SshClient;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.future.ConnectFuture;
+import org.bouncycastle.util.encoders.Base64;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -220,17 +221,18 @@ public class Ssh2DomainConnection
     public KeyPair loadKeyPair(String path, String algorithm)
             throws IOException, NoSuchAlgorithmException,
             InvalidKeySpecException {
+        System.out.println("Loading key files");
         // Read Public Key.
-        FileInputStream fis = new FileInputStream(get_publicKeyFile());
-        byte[] encodedPublicKey = new byte[(int) get_publicKeyFile().length()];
-        fis.read(encodedPublicKey);
-        fis.close();
+        String pubKeyPem = readFile(get_publicKeyFile().getPath());
+        pubKeyPem = pubKeyPem.replace("-----BEGIN RSA PRIVATE KEY-----\n", "").replace("-----END RSA PRIVATE KEY-----", "");
+        System.out.println("pubKeyPem = " + pubKeyPem);
+        byte[] encodedPublicKey = Base64.decode(pubKeyPem);
 
         // Read Private Key.
-        fis = new FileInputStream(get_privateKeyFile());
-        byte[] encodedPrivateKey = new byte[(int) get_privateKeyFile().length()];
-        fis.read(encodedPrivateKey);
-        fis.close();
+        String privKeyPem = readFile(get_privateKeyFile().getPath());
+        privKeyPem = privKeyPem.replace("-----BEGIN DSA PRIVATE KEY-----\n", "").replace("-----END DSA PRIVATE KEY-----", "");
+        System.out.println("privKeyPem = " + privKeyPem);
+        byte[] encodedPrivateKey = Base64.decode(privKeyPem);
 
         // Generate KeyPair.
         KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
@@ -246,6 +248,31 @@ public class Ssh2DomainConnection
 
         return new KeyPair(publicKey, privateKey);
     }
+
+    private String readFile( String file ) throws IOException {
+        BufferedReader reader = new BufferedReader( new FileReader (file));
+        String         line = null;
+        StringBuilder  stringBuilder = new StringBuilder();
+        String         ls = System.getProperty("line.separator");
+
+        while( ( line = reader.readLine() ) != null ) {
+            stringBuilder.append( line );
+            stringBuilder.append( ls );
+        }
+
+        return stringBuilder.toString();
+    }
+
+//    // This is a Java seven version of creating string from file
+//    static String readFile(String path, Charset encoding)
+//            throws IOException
+//    {
+//
+//        byte[] encoded = Files.readAllBytes(Paths.get(path));
+//        return encoding.decode(ByteBuffer.wrap(encoded)).toString();
+//    }
+
+
 
     public static void main(String[] args) throws Exception {
 //        if (args.length < 2) {
