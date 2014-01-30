@@ -2,22 +2,23 @@
 //
 package org.pcells.services.gui;
 
-import dmg.util.*;
-//
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.font.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.event.*;
-import java.util.*;
-import java.io.*;
-import java.net.*;
-import java.lang.reflect.*;
-import java.util.prefs.*;
 import org.pcells.services.connection.*;
 import org.pcells.util.CellGuiClassLoader;
 import org.pcells.util.ModuleClassLoader;
+
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.net.ConnectException;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.prefs.Preferences;
+
+//
 
 public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
 
@@ -338,7 +339,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
             connection.setPassword(password);
             String userHome = System.getProperties().getProperty("user.home");
             if (userHome != null) {
-//            File identity = new File(userHome,".ssh/identity" ) ;
+//                File identity = new File(userHome,".ssh/identity" ) ;
                 File identity = new File(userHome, ".ssh" + File.separator + "identity");
                 System.out.println("Setting identity file to : " + identity);
                 if (identity.exists()) {
@@ -372,15 +373,24 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
             connection.setPassword(password);
             String userHome = System.getProperties().getProperty("user.home");
             if (userHome != null) {
-//            File identity = new File(userHome,".ssh/identity" ) ;
-                File identity = new File(userHome, ".ssh" + File.separator + "identity");
-                System.out.println("Setting identity file to : " + identity);
-                if (identity.exists()) {
+                File path = new File(userHome, ".ssh");
+//                File identity = new File(userHome, ".ssh" + File.separator + "identity");
+//                System.out.println("Setting identity file to : " + identity);
+                File privateKeyFile = new File(userHome, ".ssh" + File.separator + "id_dsa");
+                File publicKeyFile = new File(userHome, ".ssh" + File.separator + "id_dsa.pub");
+                System.out.println("private KeyFile: " + privateKeyFile.getPath());
+                System.out.println("public KeyFile: " + publicKeyFile.getPath());
+                if (privateKeyFile.exists() && publicKeyFile.exists()) {
+                    System.out.println("Private and public keys exist");
                     try {
-                        System.out.println("Setting identity file to : " + identity);
-                        connection.setIdentityFile(identity);
+//                        connection.setIdentityFile(identity);
+                        connection.set_keyPath(path);
+                        System.out.println("Setting keyPath to: " + connection.get_keyPath().getPath());
+                        connection.setKeyPair(privateKeyFile, publicKeyFile);
+                        System.out.println("Setting private key to: " + privateKeyFile.toString() + " and  public key to: "+ publicKeyFile.toString());
                     } catch (Exception ee) {
-                        System.err.println("Problems reading : " + identity);
+//                        System.err.println("Problems reading : " + identity);
+                        System.err.println("Some problem: " + ee);
                     }
                 }
             }
