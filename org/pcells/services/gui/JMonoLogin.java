@@ -374,10 +374,11 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
             String userHome = System.getProperties().getProperty("user.home");
             if (userHome != null) {
                 String path = userHome + ".ssh";
-//                File identity = new File(userHome, ".ssh" + File.separator + "identity");
-//                System.out.println("Setting identity file to : " + identity);
-                String privateKeyFilePath = userHome+ "/.ssh" + File.separator + "id_dsa.der";
-                String publicKeyFilePath = userHome+ "/.ssh" + File.separator + "id_dsa.pub.der";
+//                String privateKeyFilePath = userHome+ "/.ssh" + File.separator + "id_dsa.der";
+//                String publicKeyFilePath = userHome+ "/.ssh" + File.separator + "id_dsa.pub.der";
+                Preferences sshKeysPrefs = _preferences.node("SSH2_KEYS");
+                String privateKeyFilePath = sshKeysPrefs.get("privateKeyPath", userHome+ "/.ssh" + File.separator + "id_dsa.der");
+                String publicKeyFilePath = sshKeysPrefs.get("publicKeyPath", userHome+ "/.ssh" + File.separator + "id_dsa.pub.der");
                 connection.set_algorithm("DSA");
                 System.out.println("private KeyFile: " + privateKeyFilePath);
                 System.out.println("public KeyFile: " + publicKeyFilePath);

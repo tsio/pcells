@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -675,8 +676,9 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
             storePreferences() ;
         }
         private void loadPreferences() throws Exception {
-            _privateKeyTextField.setText(_preferences.get("privateKeyPath", "~/.ssh/id_dsa.der"));
-            _publicKeyTextField.setText(_preferences.get("publicKeyPath", "~/.ssh/id_dsa.pub.der")) ;
+            String userHome = System.getProperties().getProperty("user.home");
+            _privateKeyTextField.setText(_preferences.get("privateKeyPath", userHome+ "/.ssh" + File.separator + "id_dsa.der"));
+            _publicKeyTextField.setText(_preferences.get("publicKeyPath", userHome+ "/.ssh" + File.separator + "id_dsa.pub.der")) ;
         }
 
         private void storePreferences() throws Exception {
