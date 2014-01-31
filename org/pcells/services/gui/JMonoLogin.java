@@ -373,21 +373,23 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
             connection.setPassword(password);
             String userHome = System.getProperties().getProperty("user.home");
             if (userHome != null) {
-                File path = new File(userHome, ".ssh");
+                String path = userHome + ".ssh";
 //                File identity = new File(userHome, ".ssh" + File.separator + "identity");
 //                System.out.println("Setting identity file to : " + identity);
-                File privateKeyFile = new File(userHome, ".ssh" + File.separator + "id_dsa");
-                File publicKeyFile = new File(userHome, ".ssh" + File.separator + "id_dsa.pub");
-                System.out.println("private KeyFile: " + privateKeyFile.getPath());
-                System.out.println("public KeyFile: " + publicKeyFile.getPath());
-                if (privateKeyFile.exists() && publicKeyFile.exists()) {
+                String privateKeyFilePath = userHome+ "/.ssh" + File.separator + "id_dsa.der";
+                String publicKeyFilePath = userHome+ "/.ssh" + File.separator + "id_dsa.pub.der";
+                connection.set_algorithm("DSA");
+                System.out.println("private KeyFile: " + privateKeyFilePath);
+                System.out.println("public KeyFile: " + publicKeyFilePath);
+
+                if (new File(privateKeyFilePath).exists() && new File (publicKeyFilePath).exists()) {
                     System.out.println("Private and public keys exist");
                     try {
 //                        connection.setIdentityFile(identity);
                         connection.set_keyPath(path);
-                        System.out.println("Setting keyPath to: " + connection.get_keyPath().getPath());
-                        connection.setKeyPair(privateKeyFile, publicKeyFile);
-                        System.out.println("Setting private key to: " + privateKeyFile.toString() + " and  public key to: "+ publicKeyFile.toString());
+                        System.out.println("Setting keyPath to: " + connection.get_keyPath());
+                        connection.setKeyPairPaths(privateKeyFilePath, publicKeyFilePath);
+                        System.out.println("Setting private key to: " + privateKeyFilePath.toString() + " and  public key to: "+ publicKeyFilePath.toString());
                     } catch (Exception ee) {
 //                        System.err.println("Problems reading : " + identity);
                         System.err.println("Some problem: " + ee);

@@ -8,7 +8,6 @@ import org.apache.sshd.ClientSession;
 import org.apache.sshd.SshClient;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.future.ConnectFuture;
-import org.bouncycastle.util.encoders.Base64;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -34,9 +33,10 @@ public class Ssh2DomainConnection
     public SshAuthRsa _rsaAuth = null;
     public String _password = null;
     public String _loginName = "Unknown";
-    public File _privateKeyFile;
-    public File _publicKeyFile;
-    public File _keyPath;
+    public String _privateKeyFilePath;
+    public String _publicKeyFilePath;
+    public String _keyPath;
+    public String _algorithm;
 
     public Ssh2DomainConnection(String hostname, int portnumber) {
         _hostname = hostname;
@@ -67,13 +67,17 @@ public class Ssh2DomainConnection
             while ((ret & ClientSession.WAIT_AUTH) != 0) {
                 if ( _password.isEmpty() ) {
                     System.out.println("++++++++++++ Keybaseed Login +++++++++++++++++");
-                    System.out.println("++++++++++++ with User: "+ _loginName +"+++++++++++++++++");
-                    authFuture = _session.authPublicKey(_loginName, loadKeyPair(get_keyPath().getPath(),"DSA"));
+                    System.out.println("++++++++++++ with User: "+ _loginName +"and keyPath: " + get_keyPath() + "and algorithm: " +get_algorithm()+" +++++++++++++++++");
+                    KeyPair keyPair = loadKeyPair(get_keyPath(), _algorithm);
+                    System.out.println("Got key pair: " + keyPair.getPrivate().toString() + " and " + keyPair.getPublic().toString());
+                    authFuture = _session.authPublicKey(_loginName, keyPair);
+                    ret = _session.waitFor(ClientSession.WAIT_AUTH | ClientSession.CLOSED | ClientSession.AUTHED, 0);
                 } else {
                     authFuture = _session.authPassword(_loginName, _password);
                     ret = _session.waitFor(ClientSession.WAIT_AUTH | ClientSession.CLOSED | ClientSession.AUTHED, 0);
                 }
             }
+
             System.out.println("Ssh2 AuthFuture: " + authFuture);
             if (authFuture != null) {
                 if (authFuture.isSuccess()) {
@@ -133,9 +137,9 @@ public class Ssh2DomainConnection
         _password = password;
     }
 
-    public void setKeyPair(File privateKeyFile, File publicKeyFile) {
-        _privateKeyFile = privateKeyFile;
-        _publicKeyFile = publicKeyFile;
+    public void setKeyPairPaths(String privateKeyFile, String publicKeyFile) {
+        _privateKeyFilePath = privateKeyFile;
+        _publicKeyFilePath = publicKeyFile;
     }
 
     public void setIdentityFile(File identityFile) throws Exception {
@@ -156,6 +160,7 @@ public class Ssh2DomainConnection
     //   Client Authentication interface
     //
     private int _requestCounter = 0;
+
     public boolean isHostKey(InetAddress host, SshRsaKey keyModulus) {
 
 
@@ -166,7 +171,6 @@ public class Ssh2DomainConnection
 
         return true;
     }
-
     public String getUser() {
         _requestCounter = 0;
         return _loginName;
@@ -194,85 +198,106 @@ public class Ssh2DomainConnection
         return result;
     }
 
-    public File get_privateKeyFile() {
-        return _privateKeyFile;
+    public String get_privateKeyFilePath() {
+        return _privateKeyFilePath;
     }
 
-    public void set_privateKeyFile(File _privateKeyFile) {
-        this._privateKeyFile = _privateKeyFile;
+    public void set_privateKeyFilePath(String _privateKeyFilePath) {
+        this._privateKeyFilePath = _privateKeyFilePath;
     }
 
-    public File get_publicKeyFile() {
-        return _publicKeyFile;
+    public String get_publicKeyFilePath() {
+        return _publicKeyFilePath;
     }
 
-    public void set_publicKeyFile(File _publicKeyFile) {
-        this._publicKeyFile = _publicKeyFile;
+    public void set_publicKeyFilePath(String _publicKeyFilePath) {
+        this._publicKeyFilePath = _publicKeyFilePath;
     }
 
-    public File get_keyPath() {
+    public String get_keyPath() {
         return _keyPath;
     }
 
-    public void set_keyPath(File _keyPath) {
+    public void set_keyPath(String _keyPath) {
         this._keyPath = _keyPath;
+    }
+
+    public String get_algorithm() {
+        return _algorithm;
+    }
+
+    public void set_algorithm(String _algorithm) {
+        this._algorithm = _algorithm;
     }
 
     public KeyPair loadKeyPair(String path, String algorithm)
             throws IOException, NoSuchAlgorithmException,
             InvalidKeySpecException {
         System.out.println("Loading key files");
-        // Read Public Key.
-        String pubKeyPem = readFile(get_publicKeyFile().getPath());
-        pubKeyPem = pubKeyPem.replace("-----BEGIN RSA PRIVATE KEY-----\n", "").replace("-----END RSA PRIVATE KEY-----", "");
-        System.out.println("pubKeyPem = " + pubKeyPem);
-        byte[] encodedPublicKey = Base64.decode(pubKeyPem);
 
-        // Read Private Key.
-        String privKeyPem = readFile(get_privateKeyFile().getPath());
-        privKeyPem = privKeyPem.replace("-----BEGIN DSA PRIVATE KEY-----\n", "").replace("-----END DSA PRIVATE KEY-----", "");
-        System.out.println("privKeyPem = " + privKeyPem);
-        byte[] encodedPrivateKey = Base64.decode(privKeyPem);
-
-        // Generate KeyPair.
-        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
-        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(
-                encodedPublicKey);
-        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-
-        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
-                encodedPrivateKey);
-        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
-
-        System.out.println(publicKey.toString() + "<-- public, private -->" + privateKey.toString() );
-
+        PublicKey publicKey = null;
+        try {
+            System.out.println("Get Public Key: " + get_publicKeyFilePath() +" with algorithm: "+ algorithm);
+            publicKey = generatePublicKey(get_publicKeyFilePath(), algorithm);
+            System.out.println("Generated Public Key");
+        } catch (Exception e) {
+            System.out.println("Problem getting public key: ");
+            e.printStackTrace();
+        }
+        PrivateKey privateKey = null;
+        try {
+            System.out.println("Get Private Key: " + get_privateKeyFilePath() + " with algorithm: " + algorithm);
+            privateKey = generatePrivateKey(get_privateKeyFilePath(), algorithm);
+            System.out.println("Generated Private Key");
+        } catch (Exception e) {
+            System.out.println("Problem getting private key: ");
+            e.printStackTrace();
+        }
         return new KeyPair(publicKey, privateKey);
     }
 
-    private String readFile( String file ) throws IOException {
-        BufferedReader reader = new BufferedReader( new FileReader (file));
-        String         line = null;
-        StringBuilder  stringBuilder = new StringBuilder();
-        String         ls = System.getProperty("line.separator");
-
-        while( ( line = reader.readLine() ) != null ) {
-            stringBuilder.append( line );
-            stringBuilder.append( ls );
+    private byte[] readFromKeyFile (String filename) {
+        File f = new File(filename);
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(f);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
-
-        return stringBuilder.toString();
+        DataInputStream dis = new DataInputStream(fis);
+        byte[] keyBytes = new byte[(int)f.length()];
+        try {
+            dis.readFully(keyBytes);
+            dis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Read file: "+ filename);
+        return keyBytes;
     }
 
-//    // This is a Java seven version of creating string from file
-//    static String readFile(String path, Charset encoding)
-//            throws IOException
-//    {
-//
-//        byte[] encoded = Files.readAllBytes(Paths.get(path));
-//        return encoding.decode(ByteBuffer.wrap(encoded)).toString();
-//    }
+    public PublicKey generatePublicKey(String filename, String algorithm)
+            throws Exception {
+        System.out.println("Generating Public Key: " + filename + " , " +algorithm);
+        byte[] keyBytes = readFromKeyFile(filename);
+        X509EncodedKeySpec spec =
+                new X509EncodedKeySpec(keyBytes);
+        System.out.println("Get Kefactory for algorithm: " +algorithm);
+        KeyFactory kf = KeyFactory.getInstance(algorithm);
+        return kf.generatePublic(spec);
+    }
 
+    public PrivateKey generatePrivateKey(String filename, String algorithm)
+            throws Exception {
+        System.out.println("Generating Private Key: "+ filename +" , "+ algorithm);
+        byte[] keyBytes = readFromKeyFile(filename);
 
+        PKCS8EncodedKeySpec spec =
+                new PKCS8EncodedKeySpec(keyBytes);
+        System.out.println("Get Keyfactory for algorithm: " +algorithm);
+        KeyFactory kf = KeyFactory.getInstance(algorithm);
+        return kf.generatePrivate(spec);
+    }
 
     public static void main(String[] args) throws Exception {
 //        if (args.length < 2) {
@@ -282,7 +307,7 @@ public class Ssh2DomainConnection
 //        }
 //        String hostname = args[0];
 //        int portnumber = Integer.parseInt(args[1]);
-        String hostname = "vm-dcache-deploy5.desy.de";
+        String hostname = "localhost";
         int portnumber = 22224;
         try {
             System.out.println("Pinging host:" + InetAddress.getByName(hostname).isReachable(1000));
@@ -308,7 +333,15 @@ public class Ssh2DomainConnection
             setLoginName("admin");
             System.out.println("LoginName set");
 //            setIdentityFile(new File("/Users/chris/.ssh/identity"));
-            setPassword("dickerelch");
+            String userHome = System.getProperties().getProperty("user.home");
+            String keyPath = userHome+".ssh";
+            set_keyPath(keyPath);
+            set_privateKeyFilePath(userHome + "/.ssh" + File.separator + "id_dsa.der");
+            set_publicKeyFilePath(userHome + "/.ssh" + File.separator + "id_dsa.pub.der");
+            set_algorithm("DSA");
+            setLoginName("admin");
+            System.out.println("Keys set to: " + get_privateKeyFilePath() + " and " + get_publicKeyFilePath());
+            setPassword("");
             System.out.println("Password set");
         }
 
