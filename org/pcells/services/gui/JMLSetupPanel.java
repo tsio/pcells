@@ -659,6 +659,10 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
         private JLabel _publicKeyLabel = new JLabel( "SSH public key" , JLabel.RIGHT ) ;
         private JTextField _privateKeyTextField = new JTextField(20) ;
         private JTextField _publicKeyTextField = new JTextField(20) ;
+        private JRadioButton  _dsa     = new JRadioButton("DSA" , false ) ;
+        private JRadioButton  _rsa    = new JRadioButton("RSA" , true ) ;
+        private ButtonGroup   _algorithmButtonGroup = new ButtonGroup() ;
+        private String _algorithm;
 
         private Preferences _preferences = null ;
 
@@ -679,12 +683,14 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
             String userHome = System.getProperties().getProperty("user.home");
             _privateKeyTextField.setText(_preferences.get("privateKeyPath", userHome+ "/.ssh" + File.separator + "id_dsa.der"));
             _publicKeyTextField.setText(_preferences.get("publicKeyPath", userHome+ "/.ssh" + File.separator + "id_dsa.pub.der")) ;
+            String algorithm = _preferences.get("algorithm" , "RSA" ) ;
+            selectKeyAlgorithm( algorithm ); ;
         }
 
         private void storePreferences() throws Exception {
             _preferences.put("privateKeyPath", _privateKeyTextField.getText()) ;
             _preferences.put("publicKeyPath", _publicKeyTextField.getText()) ;
-
+            _preferences.put( "algorithm"    , _algorithm ) ;
             _preferences.sync();
         }
         private Ssh2KeyPanel( String name , Preferences pref ){
@@ -695,8 +701,10 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
 
             CellGuiSkinHelper.setComponentProperties(_privateKeyLabel) ;
             CellGuiSkinHelper.setComponentProperties(_publicKeyLabel) ;
+            CellGuiSkinHelper.setComponentProperties( _dsa ) ;
+            CellGuiSkinHelper.setComponentProperties( _rsa ) ;
             setBorder(
-                    BorderFactory.createTitledBorder(" SSH keys need to be DER  ")
+                    BorderFactory.createTitledBorder(" SSH keys need to be in DER format.")
             );
             GridBagConstraints c = new GridBagConstraints()  ;
             c.gridheight = 1 ;
@@ -715,6 +723,19 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
             c.gridwidth  = 3 ; c.gridx = 1 ; c.gridy = 2 ;
             c.fill       = GridBagConstraints.HORIZONTAL ;
             add(_publicKeyTextField, c ) ;
+            c.gridwidth  = 1 ; c.gridx = 1 ; c.gridy = 3 ;
+            add( _dsa , c ) ;
+            c.gridwidth  = 1 ; c.gridx = 2 ; c.gridy = 3 ;
+            add( _rsa , c ) ;
+
+
+            _algorithmButtonGroup.add( _dsa ) ;
+            _algorithmButtonGroup.add( _rsa ) ;
+
+            _dsa.addActionListener(this);
+            _rsa.addActionListener(this);
+            _dsa.setActionCommand("DSA");
+            _rsa.setActionCommand("RSA");
 
             try{
                 loadPreferences() ;
@@ -723,9 +744,21 @@ public class JMLSetupPanel extends CellGuiSkinHelper.CellPanel implements Action
             }
         }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
+        private void selectKeyAlgorithm( String keyAlgorithm ){
+            _algorithm = keyAlgorithm ;
+            if( keyAlgorithm.equals("DSA") ){
+                _dsa.setSelected(true);
+            }else if( keyAlgorithm.equals("RSA") ){
+                _rsa.setSelected(true);
+            }else{
+                _rsa.setSelected(true);
+                _algorithm = "RSA" ;
+            }
+        }
 
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            _algorithm = event.getActionCommand() ;
         }
     }
 
