@@ -2,31 +2,19 @@
 //
 package org.pcells.services.connection;
 //
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import dmg.cells.applets.login.DomainObjectFrame;
+import org.slf4j.Logger;
+
+import java.io.*;
+import java.sql.Timestamp;
+import java.util.*;
 
 
 /**
  */
 public class DomainConnectionAdapter implements DomainConnection {
+
+    private static Logger _logger;
 
     private Map<DomainObjectFrame, DomainConnectionListener> _packetHash = new HashMap<DomainObjectFrame, DomainConnectionListener>();
     private final Object _ioLock = new Object();
@@ -59,20 +47,20 @@ public class DomainConnectionAdapter implements DomainConnection {
     }
 
     public void go() throws Exception {
-        System.out.println("runConnection started");
+        _logger.debug("runConnection started");
         try {
             runConnection();
 
-            System.out.println("runConnection OK");
+            _logger.debug("runConnection OK");
 
             informListenersOpened();
 
-            System.out.println("runReceiver starting");
+            _logger.debug("runReceiver starting");
             runReceiver();
         } catch (Throwable e) {
             e.printStackTrace();
         } finally {
-            System.out.println("runReceiver finished");
+            _logger.debug("runReceiver finished");
             informListenersClosed();
         }
     }
@@ -95,21 +83,21 @@ public class DomainConnectionAdapter implements DomainConnection {
 
         writer.println("$BINARY$");
         writer.flush();
-        System.out.println("Wrote Binary");
+        _logger.debug("Wrote Binary");
         String check;
         do {
             check = reader.readLine();
-            System.out.println("This was read from the InputStream: "+ check);
+            _logger.debug("This was read from the InputStream: "+ check);
         } while (!check.equals("$BINARY$"));
         _objOut = new ObjectOutputStream(_outputStream);
         _objOut.flush();
         Calendar calendar = Calendar.getInstance();
         Date currentTimestamp = new Timestamp(calendar.getTime().getTime());
-        System.out.println(currentTimestamp.toString() + " Flushed ObjectOutputStream Opening object streams.");
+        _logger.debug(currentTimestamp.toString() + " Flushed ObjectOutputStream Opening object streams.");
         assert inputstream != null;
 //            BufferedInputStream bufStream = new BufferedInputStream(teeIn);
         _objIn = new ObjectInputStream(inputstream);
-        System.out.println("Created ObjectStreams.");
+        _logger.debug("Created ObjectStreams.");
     }
 
     protected void runReceiver() throws Exception {
@@ -132,14 +120,14 @@ public class DomainConnectionAdapter implements DomainConnection {
                 frame = (DomainObjectFrame) obj;
                 listener = _packetHash.remove(frame);
                 if (listener == null) {
-                    System.err.println("Message without receiver : " + frame);
+                    _logger.error("Message without receiver : " + frame);
                     continue;
                 }
             }
             try {
                 listener.domainAnswerArrived(frame.getPayload(), frame.getSubId());
             } catch (Exception eee) {
-                System.out.println("Problem in domainAnswerArrived : " + eee);
+                _logger.error("Problem in domainAnswerArrived : " + eee);
             }
         }
     }
@@ -168,7 +156,7 @@ public class DomainConnectionAdapter implements DomainConnection {
             Object obj,
             DomainConnectionListener listener,
             int id) throws IOException {
-//         System.out.println("Sending : "+obj ) ;
+//         _logger.debug("Sending : "+obj ) ;
         synchronized (_ioLock) {
             if (!_connected) {
                 throw new IOException("Not connected");

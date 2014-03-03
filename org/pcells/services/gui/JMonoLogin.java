@@ -5,6 +5,8 @@ package org.pcells.services.gui;
 import org.pcells.services.connection.*;
 import org.pcells.util.CellGuiClassLoader;
 import org.pcells.util.ModuleClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -22,6 +24,8 @@ import java.util.prefs.Preferences;
 
 public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
 
+    private static Logger _logger;
+
     private String _name = null;
     private JPanel _loginPanel = null;
     private UserPasswordPanel _userPasswordPanel = null;
@@ -33,6 +37,8 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
     private JPanel _setup = null;
 
     public JMonoLogin(String name, Preferences node) {
+
+        _logger = LoggerFactory.getLogger(JMonoLogin.class);
 
         _name = name;
         _preferences = node;
@@ -53,7 +59,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
     }
 
     public void paintComponent(Graphics gin) {
-        //System.err.println("Paint component for : "+this);
+        //_logger.error("Paint component for : "+this);
         CellGuiSkinHelper.paintComponentBackground(gin, this);
         super.paintComponent(gin);
     }
@@ -113,8 +119,8 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
 
         public void actionPerformed(ActionEvent event) {
             Object source = event.getSource();
-//         System.out.println("Event : "+source.getClass().getName());
-//         System.out.println("Event : "+event.getActionCommand());
+//         _logger.debug("Event : "+source.getClass().getName());
+//         _logger.debug("Event : "+event.getActionCommand());
             if ((source == _userPasswordPanel._loginButton)
                     || (source == _userPasswordPanel._passwd)) {
                 new Thread(
@@ -125,7 +131,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
                                     remark("");
                                     tryLogin();
                                 } catch (Exception ee) {
-                                    System.err.println("tryLogin reported : " + ee);
+                                    _logger.error("tryLogin reported : " + ee);
                                     ee.printStackTrace();
                                     if (ee instanceof ConnectException) {
                                         remark(ee.getMessage());
@@ -143,24 +149,24 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
         }
 
         public void connectionOpened(DomainConnection connection) {
-            System.out.println("DomainConnection : connectionOpened");
+            _logger.debug("DomainConnection : connectionOpened");
             try {
                 preparePanelModules();
                 displayTabPanel();
             } catch (Exception ee) {
-                System.err.println("preparePanelModule reported : " + ee);
+                _logger.error("preparePanelModule reported : " + ee);
                 ee.printStackTrace();
             }
         }
 
         public void connectionClosed(DomainConnection connection) {
-            System.out.println("DomainConnection : connectionClosed");
+            _logger.debug("DomainConnection : connectionClosed");
             displayLoginPanel();
         }
 
         public void connectionOutOfBand(DomainConnection connection,
                 Object subject) {
-            System.out.println("DomainConnection : connectionOutOfBand");
+            _logger.debug("DomainConnection : connectionOutOfBand");
         }
     }
 
@@ -174,7 +180,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
 
         if (!(loader instanceof ModuleClassLoader)) {
             String errorMessage = "JMonoLogin needs the ModuleClassLoader, but only got : " + loader.getClass().getName();
-            System.err.println(errorMessage);
+            _logger.error(errorMessage);
             throw new IllegalArgumentException(errorMessage);
         }
         for (Iterator it = ((ModuleClassLoader) loader).modules(); it.hasNext();) {
@@ -184,7 +190,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
             String moduleName = entry.getModuleName();
 
 
-            System.out.println("Module :  name : " + moduleName + " class " + className);
+            _logger.debug("Module :  name : " + moduleName + " class " + className);
             CellGuiSkinHelper.setComponentProperties(_tab);
 
             Class domainConnectionClass = loader.loadClass("org.pcells.services.connection.DomainConnection");
@@ -217,7 +223,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
                     _tab.addTab("   " + moduleName + "   ", cp);
 
                 } catch (Exception eee) {
-                    System.err.println("Failed to create " + moduleName);
+                    _logger.error("Failed to create " + moduleName);
                     ee.printStackTrace();
                     continue;
 
@@ -239,7 +245,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
             String name = module.get("name", null);
 
 
-            System.out.println("Module : " + module.name() + " name : " + name + " class " + className);
+            _logger.debug("Module : " + module.name() + " name : " + name + " class " + className);
             if ((name == null) || (className == null)) {
                 continue;
             }
@@ -270,7 +276,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
                     _tab.addTab("   " + name + "   ", cp);
 
                 } catch (Exception eee) {
-                    System.err.println("Failed to create " + name);
+                    _logger.error("Failed to create " + name);
                     ee.printStackTrace();
 
                 }
@@ -286,40 +292,40 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
         try {
             _domainConnection.sendObject("logoff", null, 0);
         } catch (Exception e) {
-            System.err.println("Problem in closeing : " + e);
+            _logger.error("Problem in closeing : " + e);
             e.printStackTrace();
         }
         /*
          * try{ Method method =
          * _domainConnection.getClass().getMethod("close",null);
-         * method.invoke(_domainConnection,null); System.out.println("'close'
-         * invoked"); }catch(Exception e ){ System.err.println("Problem in
+         * method.invoke(_domainConnection,null); _logger.debug("'close'
+         * invoked"); }catch(Exception e ){ _logger.error("Problem in
          * closeing : "+e); e.printStackTrace(); }
          */
     }
 
     private void tryLogin() throws Exception {
-        System.out.println("Trying login");
+        _logger.debug("Trying login");
         if (_protocol == null) {
             return;
         }
 
         if (_protocol.equals("raw")) {
-            System.out.println("Trying login (raw)");
+            _logger.debug("Trying login (raw)");
 
             Preferences addr = _preferences.node("Addresses");
             String nodename = addr.get("hostname", "localhost");
             String port = addr.get("portnumber", "22223");
             int portnumber = Integer.parseInt(port);
-            System.out.println("Connecting to " + nodename + ":" + portnumber);
+            _logger.debug("Connecting to " + nodename + ":" + portnumber);
             RawDomainConnection connection = new RawDomainConnection(nodename, portnumber);
-            System.out.println("Connected to " + nodename + ":" + portnumber);
+            _logger.debug("Connected to " + nodename + ":" + portnumber);
             _domainConnection = connection;
             connection.addDomainEventListener(_switchboard);
             connection.go();
 
         } else if (_protocol.equals("ssh1")) {
-            System.out.println("Trying login (ssh1)");
+            _logger.debug("Trying login (ssh1)");
 
             Preferences addr = _preferences.node("Addresses");
             String nodename = addr.get("hostname", "localhost");
@@ -333,7 +339,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
 //         String loginname = addr.get("loginname","admin");
 //         String password  = addr.get("password","dickerelch");
             int portnumber = Integer.parseInt(port);
-            System.out.println("Connecting to " + nodename + ":" + portnumber);
+            _logger.debug("Connecting to " + nodename + ":" + portnumber);
             Ssh1DomainConnection connection = new Ssh1DomainConnection(nodename, portnumber);
             connection.setLoginName(loginname);
             connection.setPassword(password);
@@ -341,17 +347,17 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
             if (userHome != null) {
 //                File identity = new File(userHome,".ssh/identity" ) ;
                 File identity = new File(userHome, ".ssh" + File.separator + "identity");
-                System.out.println("Setting identity file to : " + identity);
+                _logger.debug("Setting identity file to : " + identity);
                 if (identity.exists()) {
                     try {
-                        System.out.println("Setting identity file to : " + identity);
+                        _logger.debug("Setting identity file to : " + identity);
                         connection.setIdentityFile(identity);
                     } catch (Exception ee) {
-                        System.err.println("Problems reading : " + identity);
+                        _logger.error("Problems reading : " + identity);
                     }
                 }
             }
-            System.out.println("Connected to " + nodename + ":" + portnumber);
+            _logger.debug("Connected to " + nodename + ":" + portnumber);
             _domainConnection = connection;
             connection.addDomainEventListener(_switchboard);
             connection.go();
@@ -367,7 +373,7 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
                 password = new String(pw);
             }
             int portnumber = Integer.parseInt(port);
-            System.out.println("Connecting to " + nodename + ":" + portnumber);
+            _logger.debug("Connecting to " + nodename + ":" + portnumber);
             Ssh2DomainConnection connection = new Ssh2DomainConnection(nodename, portnumber);
             connection.setLoginName(loginname);
             connection.setPassword(password);
@@ -381,24 +387,24 @@ public class JMonoLogin extends CellGuiSkinHelper.CellPanel {
                 String publicKeyFilePath = sshKeysPrefs.get("publicKeyPath", userHome+ "/.ssh" + File.separator + "id_dsa.pub.der");
                 String algorithm = sshKeysPrefs.get("algorithm", "RSA");
                 connection.set_algorithm(algorithm);
-                System.out.println("private KeyFile: " + privateKeyFilePath);
-                System.out.println("public KeyFile: " + publicKeyFilePath);
+                _logger.debug("private KeyFile: " + privateKeyFilePath);
+                _logger.debug("public KeyFile: " + publicKeyFilePath);
 
                 if (new File(privateKeyFilePath).exists() && new File (publicKeyFilePath).exists()) {
-                    System.out.println("Private and public keys exist");
+                    _logger.debug("Private and public keys exist");
                     try {
 //                        connection.setIdentityFile(identity);
                         connection.set_keyPath(path);
-                        System.out.println("Setting keyPath to: " + connection.get_keyPath());
+                        _logger.debug("Setting keyPath to: " + connection.get_keyPath());
                         connection.setKeyPairPaths(privateKeyFilePath, publicKeyFilePath);
-                        System.out.println("Setting private key to: " + privateKeyFilePath.toString() + " and  public key to: "+ publicKeyFilePath.toString());
+                        _logger.debug("Setting private key to: " + privateKeyFilePath.toString() + " and  public key to: "+ publicKeyFilePath.toString());
                     } catch (Exception ee) {
-//                        System.err.println("Problems reading : " + identity);
-                        System.err.println("Some problem: " + ee);
+//                        _logger.error("Problems reading : " + identity);
+                        _logger.error("Some problem: " + ee);
                     }
                 }
             }
-            System.out.println("Connected to " + nodename + ":" + portnumber);
+            _logger.debug("Connected to " + nodename + ":" + portnumber);
             _domainConnection = connection;
             connection.addDomainEventListener(_switchboard);
             connection.go();

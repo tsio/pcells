@@ -8,6 +8,8 @@ import org.apache.sshd.ClientSession;
 import org.apache.sshd.SshClient;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.future.ConnectFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -26,6 +28,7 @@ public class Ssh2DomainConnection
         extends DomainConnectionAdapter
         implements SshClientAuthentication {
 
+    private static Logger _logger;
     private String _hostname = null;
     private int _portnumber = 0;
     private Socket _socket = null;
@@ -41,35 +44,36 @@ public class Ssh2DomainConnection
     public Ssh2DomainConnection(String hostname, int portnumber) {
         _hostname = hostname;
         _portnumber = portnumber;
+        _logger = LoggerFactory.getLogger(Ssh2DomainConnection.class);
 
-        System.out.println(this.getClass().getName() + " loadeded by : " + this.getClass().getClassLoader().getClass().getName());
+        _logger.debug(this.getClass().getName() + " loadeded by : " + this.getClass().getClassLoader().getClass().getName());
 
     }
 
     public void go() throws Exception {
-        System.out.println("Running Ssh2 GO");
+        _logger.debug("Running Ssh2 GO");
         SshClient ssh2Client = SshClient.setUpDefaultClient();
-        System.out.println("Initialized Ssh2Client");
+        _logger.debug("Initialized Ssh2Client");
         ssh2Client.start();
         try {
-            System.out.println("Ssh2Client started. Creating Session");
+            _logger.debug("Ssh2Client started. Creating Session");
             ConnectFuture connectFuture = ssh2Client.connect(_hostname, _portnumber);
             connectFuture.awaitUninterruptibly();
-            System.out.println("Connection Ssh2 successfull?: " + connectFuture.isConnected());
+            _logger.debug("Connection Ssh2 successfull?: " + connectFuture.isConnected());
             if (connectFuture.getSession() != null) {
                 _session = connectFuture.getSession();
             } else {
-                System.out.println("The session does not exist.");
+                _logger.error("The session does not exist.");
             }
-            System.out.println("Ssh2ClientSession created: " + _session.toString());
+            _logger.debug("Ssh2ClientSession created: " + _session.toString());
             int ret = ClientSession.WAIT_AUTH;
             AuthFuture authFuture = null;
             while ((ret & ClientSession.WAIT_AUTH) != 0) {
                 if ( _password.isEmpty() ) {
-                    System.out.println("++++++++++++ Keybaseed Login +++++++++++++++++");
-                    System.out.println("++++++++++++ with User: "+ _loginName +"and keyPath: " + get_keyPath() + "and algorithm: " +get_algorithm()+" +++++++++++++++++");
+                    _logger.debug("++++++++++++ Keybaseed Login +++++++++++++++++");
+                    _logger.debug("++++++++++++ with User: " + _loginName + "and keyPath: " + get_keyPath() + "and algorithm: " + get_algorithm() + " +++++++++++++++++");
                     KeyPair keyPair = loadKeyPair(_algorithm);
-                    System.out.println("Got key pair: " + keyPair.getPrivate().toString() + " and " + keyPair.getPublic().toString());
+                    _logger.debug("Got key pair: " + keyPair.getPrivate().toString() + " and " + keyPair.getPublic().toString());
                     authFuture = _session.authPublicKey(_loginName, keyPair);
                     ret = _session.waitFor(ClientSession.WAIT_AUTH | ClientSession.CLOSED | ClientSession.AUTHED, 0);
                 } else {
@@ -78,7 +82,7 @@ public class Ssh2DomainConnection
                 }
             }
 
-            System.out.println("Ssh2 AuthFuture: " + authFuture);
+            _logger.debug("Ssh2 AuthFuture: " + authFuture);
             if (authFuture != null) {
                 if (authFuture.isSuccess()) {
                     ClientChannel channel = _session.createSubsystemChannel("pcells");
@@ -105,7 +109,7 @@ public class Ssh2DomainConnection
                     _objOut.flush();
                     Calendar calendar = Calendar.getInstance();
                     Date currentTimestamp = new Timestamp(calendar.getTime().getTime());
-                    System.out.println(currentTimestamp.toString() + " Flushed ObjectOutputStream Opening object streams.");
+                    _logger.debug(currentTimestamp.toString() + " Flushed ObjectOutputStream Opening object streams.");
                     _objIn = new ObjectInputStream(guiInputStream);
 
                     try {
@@ -123,7 +127,7 @@ public class Ssh2DomainConnection
             } else {
             }
         } catch (Exception e) {
-            System.out.println("Ssh2 Exception caught: " + e.toString());
+            _logger.error("Ssh2 Exception caught: " + e.toString());
         } finally {
             ssh2Client.stop();
         }
@@ -164,7 +168,7 @@ public class Ssh2DomainConnection
     public boolean isHostKey(InetAddress host, SshRsaKey keyModulus) {
 
 
-        //      System.out.println( "Host key Fingerprint\n   -->"+
+        //      _logger.debug( "Host key Fingerprint\n   -->"+
         //                      keyModulus.getFingerPrint()+"<--\n"   ) ;
 
         //     NOTE : this is correctly done in : import dmg.cells.applets.login.SshLoginPanel
@@ -194,7 +198,7 @@ public class Ssh2DomainConnection
         } else {
             result = null;
         }
-//       System.out.println("getAuthMethod("+_requestCounter+") "+result) ;
+//       _logger.debug("getAuthMethod("+_requestCounter+") "+result) ;
         return result;
     }
 
@@ -233,24 +237,24 @@ public class Ssh2DomainConnection
     public KeyPair loadKeyPair(String algorithm)
             throws IOException, NoSuchAlgorithmException,
             InvalidKeySpecException {
-        System.out.println("Loading key files");
+        _logger.debug("Loading key files");
 
         PublicKey publicKey = null;
         try {
-            System.out.println("Get Public Key: " + get_publicKeyFilePath() +" with algorithm: "+ algorithm);
+            _logger.debug("Get Public Key: " + get_publicKeyFilePath() + " with algorithm: " + algorithm);
             publicKey = generatePublicKey(get_publicKeyFilePath(), algorithm);
-            System.out.println("Generated Public Key");
+            _logger.debug("Generated Public Key");
         } catch (Exception e) {
-            System.out.println("Problem getting public key: ");
+            _logger.error("Problem getting public key: ");
             e.printStackTrace();
         }
         PrivateKey privateKey = null;
         try {
-            System.out.println("Get Private Key: " + get_privateKeyFilePath() + " with algorithm: " + algorithm);
+            _logger.debug("Get Private Key: " + get_privateKeyFilePath() + " with algorithm: " + algorithm);
             privateKey = generatePrivateKey(get_privateKeyFilePath(), algorithm);
-            System.out.println("Generated Private Key");
+            _logger.debug("Generated Private Key");
         } catch (Exception e) {
-            System.out.println("Problem getting private key: ");
+            _logger.error("Problem getting private key: ");
             e.printStackTrace();
         }
         return new KeyPair(publicKey, privateKey);
@@ -272,29 +276,29 @@ public class Ssh2DomainConnection
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Read file: "+ filename);
+        _logger.debug("Read file: " + filename);
         return keyBytes;
     }
 
     public PublicKey generatePublicKey(String filename, String algorithm)
             throws Exception {
-        System.out.println("Generating Public Key: " + filename + " , " +algorithm);
+        _logger.debug("Generating Public Key: " + filename + " , " + algorithm);
         byte[] keyBytes = readFromKeyFile(filename);
         X509EncodedKeySpec spec =
                 new X509EncodedKeySpec(keyBytes);
-        System.out.println("Get Kefactory for algorithm: " +algorithm);
+        _logger.debug("Get Kefactory for algorithm: " + algorithm);
         KeyFactory kf = KeyFactory.getInstance(algorithm);
         return kf.generatePublic(spec);
     }
 
     public PrivateKey generatePrivateKey(String filename, String algorithm)
             throws Exception {
-        System.out.println("Generating Private Key: "+ filename +" , "+ algorithm);
+        _logger.debug("Generating Private Key: " + filename + " , " + algorithm);
         byte[] keyBytes = readFromKeyFile(filename);
 
         PKCS8EncodedKeySpec spec =
                 new PKCS8EncodedKeySpec(keyBytes);
-        System.out.println("Get Keyfactory for algorithm: " +algorithm);
+        _logger.debug("Get Keyfactory for algorithm: " + algorithm);
         KeyFactory kf = KeyFactory.getInstance(algorithm);
         return kf.generatePrivate(spec);
     }
@@ -310,14 +314,14 @@ public class Ssh2DomainConnection
         String hostname = "localhost";
         int portnumber = 22224;
         try {
-            System.out.println("Pinging host:" + InetAddress.getByName(hostname).isReachable(1000));
-            System.out.println("Host is reachable");
+            _logger.debug("Pinging host:" + InetAddress.getByName(hostname).isReachable(1000));
+            _logger.debug("Host is reachable");
         } catch (Exception e) {
-            System.out.println("Host is not reachable");
+            _logger.error("Host is not reachable");
             e.printStackTrace();
         }
         Ssh2DomainConnection connection = new Ssh2DomainConnection(hostname, portnumber);
-        System.out.println("Starting Test");
+        _logger.debug("Starting Test");
         RunConnection runCon = connection.test();
         new Thread(runCon).start();
 
@@ -325,13 +329,13 @@ public class Ssh2DomainConnection
 
     private class RunConnection
             implements Runnable, DomainConnectionListener, DomainEventListener {
-
+             
         public RunConnection() throws Exception {
-            System.out.println("class runConnection init");
+            _logger.debug("class runConnection init");
             addDomainEventListener(this);
-            System.out.println("Event listener added");
+            _logger.debug("Event listener added");
             setLoginName("admin");
-            System.out.println("LoginName set");
+            _logger.debug("LoginName set");
 //            setIdentityFile(new File("/Users/chris/.ssh/identity"));
             String userHome = System.getProperties().getProperty("user.home");
             String keyPath = userHome+".ssh";
@@ -340,56 +344,56 @@ public class Ssh2DomainConnection
             set_publicKeyFilePath(userHome + File.separator + ".ssh" + File.separator + "id_dsa.pub.der");
             set_algorithm("DSA");
             setLoginName("admin");
-            System.out.println("Keys set to: " + get_privateKeyFilePath() + " and " + get_publicKeyFilePath());
+            _logger.debug("Keys set to: " + get_privateKeyFilePath() + " and " + get_publicKeyFilePath());
             setPassword("");
-            System.out.println("Password set");
+            _logger.debug("Password set");
         }
 
         @Override
         public void run() {
             try {
-                System.out.println("started Thread run");
+                _logger.debug("started Thread run");
                 go();
 //                connectionOpened(new Ssh2DomainConnection(_hostname, _portnumber));
-                System.out.println("After go() call");
+                _logger.debug("After go() call");
             } catch (Exception ee) {
-                System.out.println("RunConnection got : " + ee);
+                _logger.error("RunConnection got : " + ee);
                 ee.printStackTrace();
             }
         }
 
         public void domainAnswerArrived(Object obj, int id) {
-            System.out.println("Answer : " + obj);
+            _logger.debug("Answer : " + obj);
             if (id == 54) {
                 try {
                     sendObject("logoff", this, 55);
                 } catch (Exception ee) {
-                    System.out.println("Exception in sendObject" + ee);
+                    _logger.error("Exception in sendObject" + ee);
                 }
             }
         }
 
         public void connectionOpened(DomainConnection connection) {
-            System.out.println("DomainConnection : connectionOpened");
+            _logger.debug("DomainConnection : connectionOpened");
             try {
                 sendObject("System", "ps -f", this, 54);
             } catch (Exception ee) {
-                System.out.println("Exception in sendObject" + ee);
+                _logger.error("Exception in sendObject" + ee);
             }
         }
 
         public void connectionClosed(DomainConnection connection) {
-            System.out.println("DomainConnection : connectionClosed");
+            _logger.debug("DomainConnection : connectionClosed");
         }
 
         public void connectionOutOfBand(DomainConnection connection,
                 Object subject) {
-            System.out.println("DomainConnection : connectionOutOfBand");
+            _logger.debug("DomainConnection : connectionOutOfBand");
         }
     }
 
     public RunConnection test() throws Exception {
-        System.out.println("Starting Test method");
+        _logger.debug("Starting Test method");
         return new Ssh2DomainConnection.RunConnection();
     }
 }
