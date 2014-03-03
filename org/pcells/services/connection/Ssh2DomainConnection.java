@@ -68,7 +68,7 @@ public class Ssh2DomainConnection
                 if ( _password.isEmpty() ) {
                     System.out.println("++++++++++++ Keybaseed Login +++++++++++++++++");
                     System.out.println("++++++++++++ with User: "+ _loginName +"and keyPath: " + get_keyPath() + "and algorithm: " +get_algorithm()+" +++++++++++++++++");
-                    KeyPair keyPair = loadKeyPair(get_keyPath(), _algorithm);
+                    KeyPair keyPair = loadKeyPair(_algorithm);
                     System.out.println("Got key pair: " + keyPair.getPrivate().toString() + " and " + keyPair.getPublic().toString());
                     authFuture = _session.authPublicKey(_loginName, keyPair);
                     ret = _session.waitFor(ClientSession.WAIT_AUTH | ClientSession.CLOSED | ClientSession.AUTHED, 0);
@@ -230,7 +230,7 @@ public class Ssh2DomainConnection
         this._algorithm = _algorithm;
     }
 
-    public KeyPair loadKeyPair(String path, String algorithm)
+    public KeyPair loadKeyPair(String algorithm)
             throws IOException, NoSuchAlgorithmException,
             InvalidKeySpecException {
         System.out.println("Loading key files");
@@ -336,8 +336,8 @@ public class Ssh2DomainConnection
             String userHome = System.getProperties().getProperty("user.home");
             String keyPath = userHome+".ssh";
             set_keyPath(keyPath);
-            set_privateKeyFilePath(userHome + "/.ssh" + File.separator + "id_dsa.der");
-            set_publicKeyFilePath(userHome + "/.ssh" + File.separator + "id_dsa.pub.der");
+            set_privateKeyFilePath(userHome + File.separator + ".ssh" + File.separator + "id_dsa.der");
+            set_publicKeyFilePath(userHome + File.separator + ".ssh" + File.separator + "id_dsa.pub.der");
             set_algorithm("DSA");
             setLoginName("admin");
             System.out.println("Keys set to: " + get_privateKeyFilePath() + " and " + get_publicKeyFilePath());
