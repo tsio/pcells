@@ -137,7 +137,9 @@ class AdminServerSession:
             self._connection.set_privateKeyFilePath(password)
             self._connection.set_publicKeyFilePath(password+".pub")
             # hack:
-            self._connection.set_keyPath("/root/.ssh")
+            self._connection.set_keyPath("/Users/chris/.ssh")
+            self._connection.set_publicKeyFilePath("/Users/chris/.ssh/id_dsa.pub.der")
+            self._connection.set_privateKeyFilePath("/Users/chris/.ssh/id_dsa.der")
 	else :
 	    self._connection.setPassword( password )
 

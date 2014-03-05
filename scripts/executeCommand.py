@@ -1,14 +1,22 @@
-from org.pcells.services.connection import Ssh2DomainConnection
-from java.lang import Thread
+#!/usr/bin/env jython
 
-connection = Ssh2DomainConnection( "localhost", 22224 )
-connection.setLoginName( "admin" )
-connection.set_algorithm("DSA")
-connection.setPassword("")
-connection.set_privateKeyFilePath("/Users/chris/.ssh/id_dsa.der")
-connection.set_publicKeyFilePath("/Users/chris/.ssh/id_dsa.der.pub")
-connection.set_keyPath("/home/root/.ssh")
+import string
+import sys
+from AdminServerSession import runAdminCommands
 
-connection.addDomainEventListener( _myEventListener( verbose ) )
-thread = Thread( connection.go, "AdminSvrSession" )
-thread.start()
+def executeCommand( sendCommand, verbose, opts, args ) :
+    cellName=args[0]
+    listOfCommands=args[1:]
+    for command in listOfCommands:
+        if not command: continue
+        print "Executing command %s on cell %s"%(command,cellName,)
+        try:
+            rc = sendCommand(cellName,command)
+            print rc
+        except:
+            print "Command %s on cell %s failed"%(command,cellName,)
+            continue
+
+if __name__ == '__main__':
+    runAdminCommands( executeCommand )
+    sys.exit( 0 )
