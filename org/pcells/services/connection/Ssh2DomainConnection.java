@@ -313,6 +313,7 @@ public class Ssh2DomainConnection
 //        int portnumber = Integer.parseInt(args[1]);
         String hostname = "localhost";
         int portnumber = 22224;
+        Ssh2DomainConnection connection = new Ssh2DomainConnection(hostname, portnumber);
         try {
             _logger.debug("Pinging host:" + InetAddress.getByName(hostname).isReachable(1000));
             _logger.debug("Host is reachable");
@@ -320,7 +321,7 @@ public class Ssh2DomainConnection
             _logger.error("Host is not reachable");
             e.printStackTrace();
         }
-        Ssh2DomainConnection connection = new Ssh2DomainConnection(hostname, portnumber);
+
         _logger.debug("Starting Test");
         RunConnection runCon = connection.test();
         new Thread(runCon).start();
@@ -329,7 +330,9 @@ public class Ssh2DomainConnection
 
     private class RunConnection
             implements Runnable, DomainConnectionListener, DomainEventListener {
-             
+
+//        private Logger _logger = LoggerFactory.getLogger(RunConnection.class);
+
         public RunConnection() throws Exception {
             _logger.debug("class runConnection init");
             addDomainEventListener(this);
