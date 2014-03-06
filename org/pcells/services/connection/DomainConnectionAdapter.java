@@ -109,9 +109,13 @@ public class DomainConnectionAdapter implements DomainConnection {
 
         while (true) {
 
-            if ((obj = _objIn.readObject()) == null) {
+            try {
+                obj = _objIn.readObject();
+            } catch (EOFException eofEx) {
+                _objIn.close();
                 break;
             }
+
             if (!(obj instanceof DomainObjectFrame)) {
                 continue;
             }
