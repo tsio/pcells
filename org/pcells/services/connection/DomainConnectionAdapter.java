@@ -4,6 +4,7 @@ package org.pcells.services.connection;
 //
 import dmg.cells.applets.login.DomainObjectFrame;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.sql.Timestamp;
@@ -14,7 +15,7 @@ import java.util.*;
  */
 public class DomainConnectionAdapter implements DomainConnection {
 
-    private static Logger _logger;
+    private static Logger  _logger = LoggerFactory.getLogger(DomainConnectionAdapter.class);
 
     private Map<DomainObjectFrame, DomainConnectionListener> _packetHash = new HashMap<DomainObjectFrame, DomainConnectionListener>();
     private final Object _ioLock = new Object();

@@ -107,15 +107,17 @@ public class      MultiPoolCommandPanel
 
         }
         private class Listener extends WindowAdapter {
+            private Logger logger = LoggerFactory.getLogger(Listener.class);
+
             public Listener(){
-                _logger.debug("Listener instALLED");
+                logger.debug("Listener instALLED");
             }
             public void windowGainedFocus( WindowEvent event ){
-                _logger.debug("event : "+event);
+                logger.debug("event : "+event);
                 //     setVisible(false);
             }
             public void windowLostFocus( WindowEvent event ){
-                _logger.debug("event : "+event);
+                logger.debug("event : "+event);
                 setVisible(false);
             }
         }
