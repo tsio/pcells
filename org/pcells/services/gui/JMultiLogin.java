@@ -28,6 +28,8 @@ import java.util.prefs.Preferences;
  */
 public class JMultiLogin extends JFrame implements ActionListener, MenuListener {
 
+    private org.slf4j.Logger _logger = LoggerFactory.getLogger(VersionUpdate.class);
+
     public static CellGuiClassLoader __classLoader = CellGuiClassLoader.__classLoader  ;
     private static Font              __bigFont     = new Font( "Times" , Font.BOLD | Font.ITALIC , 26 ) ;
 
@@ -80,7 +82,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
         try{
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         }catch(Exception cnf ){
-            System.err.println("Native look and feel class not found or can't be initialized");
+            _logger.error("Native look and feel class not found or can't be initialized");
         }
         //
         // Java 1.4 Temporary BUG FIX
@@ -100,7 +102,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                     System.setProperty( keys[i] , prop ) ;
             }
         }catch(Exception ee ){
-            System.err.println("Problems loading preferences : "+ee ) ;
+            _logger.error("Problems loading preferences : "+ee ) ;
         }
         /*
          */
@@ -233,7 +235,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             }else{
                 JMenuItem item  = (JMenuItem)event.getSource() ;
                 String itemName = event.getActionCommand() ;
-                System.err.println("@@@ Destroy : "+itemName);
+                _logger.error("@@@ Destroy : "+itemName);
                 undefineMonoLoginEntry( itemName );
                 prepareOpenMenu();
 
@@ -265,7 +267,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
 
             }
         }catch(Exception ee ){
-            System.err.println("Problem reading 'sessions'"+ee);
+            _logger.error("Problem reading 'sessions'"+ee);
         }
     }
     private void addToWindowsMenu( String name ){
@@ -288,7 +290,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             _ourRoot.node(name);
             _ourRoot.sync();
         }catch(Exception ee ){
-            System.err.println("Problem storing new node : "+ee);
+            _logger.error("Problem storing new node : "+ee);
         }
     }
     private void undefineMonoLoginEntry( String name ){
@@ -296,7 +298,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             _ourRoot.node(name).removeNode();
             _ourRoot.sync();
         }catch(Exception ee ){
-            System.err.println("Problem removing node : "+name+" : "+ee);
+            _logger.error("Problem removing node : "+name+" : "+ee);
         }
     }
     private void addNewMonoLogin( String name ) throws Exception {
@@ -325,7 +327,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             return (JPanel)c.newInstance( new Object [] { name , _ourRoot.node(name) } ) ;
 
         }catch(Exception eee ){
-            System.err.println("createNewMonoLoginPanel : Can't create new MonoLogin due to " + eee);
+            _logger.error("createNewMonoLoginPanel : Can't create new MonoLogin due to " + eee);
             eee.printStackTrace();
             throw eee ;
         }
@@ -343,7 +345,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
 
             String result = _nameDialog.getResult() ;
             if( result == null ){
-                System.err.println("'new dialog' was canceled");
+                _logger.error("'new dialog' was canceled");
             }else{
                 defineNewMonoLoginEntry(result);
                 _cardLayout.show( _container , "drawing");
@@ -379,7 +381,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
 
         }else if( source == _windowsMenu ){
 
-//          System.out.println("Action : "+event.getActionCommand());
+//          _logger.debug("Action : "+event.getActionCommand());
 
         }else if( source instanceof JMenuItem ){
 
@@ -410,7 +412,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
 
     }
     public void menuSelected( MenuEvent event ){
-//          System.out.println("Action : "+event);
+//          _logger.debug("Action : "+event);
     }
     public void menuDeselected( MenuEvent event ){
 
@@ -448,7 +450,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                                     try{ subbr.close() ; }catch(Exception ae){}
                                 }
                             }catch(Exception eee ){
-                                System.err.println("Problem reading subUrl : "+subUrl+" : "+eee);
+                                _logger.error("Problem reading subUrl : "+subUrl+" : "+eee);
                                 continue ;
                             }
                         }
@@ -462,9 +464,9 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                 try{ br.close() ; }catch(Exception aeee){}
             }
         }catch(Exception ae ){
-            System.err.println("Problem in reading main index : "+ae);
+            _logger.error("Problem in reading main index : "+ae);
         }
-        //System.err.println("Intermediate help menue : \n"+sw.toString());
+        //_logger.error("Intermediate help menue : \n"+sw.toString());
         _helpMenu.add( new HelpMenuItem("Generic Help", new StringReader( sw.toString() ) ) ) ;
 
     }
@@ -616,7 +618,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                 }
             }
         }catch(Exception ee ){
-            System.err.println("Problems in cleaning up modules : "+ee ) ;
+            _logger.error("Problems in cleaning up modules : "+ee ) ;
         }
         return ;
     }
@@ -631,7 +633,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             loadVersion();
             int [] preferenceVersion = getVersionFromPreferences() ;
             if( compare( _currentVersion , preferenceVersion ) > 0 ){
-                System.err.println("Found old version in preferences");
+                _logger.error("Found old version in preferences current version: {} preference version: {}", _currentVersion, preferenceVersion);
                 removeAllModules() ;
                 setVersionToPreferences( _currentVersion ) ;
             }
@@ -649,15 +651,15 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                     try{
                         if( queryUpdate() )break ;
                     }catch(Exception eee ){
-                        System.err.println("updateThread reported : "+eee);
+                        _logger.error("updateThread reported : " + eee);
                     }
                     Thread.currentThread().sleep(_updateTime);
                 }catch(InterruptedException ee ){
-                    System.err.println("updateThread interrupted");
+                    _logger.error("updateThread interrupted");
                     break ;
                 }
             }
-            System.err.println("updateThread finished");
+            _logger.debug("updateThread finished");
         }
         private int [] getVersionFromPreferences(){
             String versionString = _ourRoot.get("version",null);
@@ -665,7 +667,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             try{
                 return stringToVersion(versionString);
             }catch(Exception ee ){
-                System.err.println("Couldn't get serious version from pref"+ee);
+                _logger.error("Couldn't get serious version from pref"+ee);
             }
             return new int[3] ;
         }
@@ -673,11 +675,11 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             _ourRoot.put("version",versionToString(version));
             try{ _ourRoot.flush() ; }
             catch(BackingStoreException ee){
-                System.err.println("Could store version : "+ee);
+                _logger.error("Could store version : "+ee);
             }
         }
         private boolean queryUpdate() throws Exception {
-            System.out.println("Query version from server : "+_versionUrlString);
+            _logger.debug("Query version from server : "+_versionUrlString);
             URL url = new URL(_versionUrlString);
             if( url == null )return false ;
             int [] serverVersion = new int[0];
@@ -690,7 +692,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                         StringTokenizer st = new StringTokenizer(line,".");
                         serverVersion = stringToVersion(line);
                         String serverVersionString = versionToString(serverVersion) ;
-                        System.out.println("serverVersion : "+serverVersionString);
+                        _logger.debug("serverVersion : "+serverVersionString);
                         if( ( _serverVersionString == null ) || ! _serverVersionString.equals(serverVersionString) ){
                             _serverVersionString = serverVersionString ;
                             generateAboutText() ;
@@ -701,11 +703,11 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                     try{ br.close() ; }catch(Exception eee){}
                 }
             }catch(Exception ee ){
-                System.err.println("Problem reading version "+ee);
+                _logger.error("Problem reading version "+ee);
                 return false;
             }
             if( compare( serverVersion , _currentVersion ) > 0 ){
-                System.out.println("Need new version");
+                _logger.debug("Need new version");
                 _fileMenu.setForeground(Color.red);
                 _newVersion.setForeground(Color.red);
                 _menuBar.add( _newVersion) ;
@@ -755,7 +757,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                     if( ( line = br.readLine() ) != null ){
                         _currentVersion = stringToVersion( line ) ;
                         _currentVersionString = versionToString(_currentVersion);
-                        System.out.println("currentVersion : "+_currentVersionString);
+                        _logger.debug("currentVersion : "+_currentVersionString);
                     }
                     if( ( line = br.readLine() ) != null ){
                         _versionUrlString = line ;
@@ -765,7 +767,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                     try{ br.close() ; }catch(Exception eee){}
                 }
             }catch(Exception ee ){
-                System.err.println("Problem reading version "+ee);
+                _logger.error("Problem reading version "+ee);
                 return ;
             }
 
@@ -862,7 +864,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
         }
         public void actionPerformed( ActionEvent event ){
             if( _helpMenu == null ){
-//              System.out.println("Generating help menu "+event );
+//              _logger.debug("Generating help menu "+event );
                 try{
                     _helpMenu = _url != null ?
                             (JFrame) new JSelectionHelpFrame(_title,_url) :
@@ -923,31 +925,31 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
         public void actionPerformed( ActionEvent event ){
             Object source = event.getSource() ;
             if( source == _skinBorder ){
-                System.out.println(" Skin border " + _skinBorder.isSelected() ) ;
+                _logger.debug(" Skin border " + _skinBorder.isSelected() ) ;
                 CellGuiSkinHelper.setNiceBorder(_skinBorder.isSelected());
             }else if( source == _skinMode ){
-                System.out.println(" Skin Mode " + _skinBorder.isSelected() ) ;
+                _logger.debug(" Skin Mode " + _skinBorder.isSelected() ) ;
                 CellGuiSkinHelper.setSkin(_skinMode.isSelected());
             }else if( source == _borderBottomColorItem ){
                 Color color = JColorChooser.showDialog(this,"Choose Border Bottom",Color.white);
                 if( color == null )return ;
                 CellGuiSkinHelper.setBottomColor(color);
-                System.out.println("Result : "+color);
+                _logger.debug("Result : "+color);
             }else if( source == _borderTopColorItem ){
                 Color color = JColorChooser.showDialog(this,"Choose Border Top",Color.white);
                 if( color == null )return ;
                 CellGuiSkinHelper.setTopColor(color);
-                System.out.println("Result : "+color);
+                _logger.debug("Result : "+color);
             }else if( source == _backgroundColorItem ){
                 Color color = JColorChooser.showDialog(this,"Choose Background",Color.white);
                 if( color == null )return ;
                 CellGuiSkinHelper.setBackgroundColor(color);
-                System.out.println("Result : "+color);
+                _logger.debug("Result : "+color);
             }else if( source == _foregroundColorItem ){
                 Color color = JColorChooser.showDialog(this,"Choose Foreground",Color.black);
                 if( color == null )return ;
                 CellGuiSkinHelper.setForegroundColor(color);
-                System.out.println("Result : "+color);
+                _logger.debug("Result : "+color);
             }
         }
 
@@ -973,7 +975,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                             JMultiLogin.this,
                             "Set/modify/remove property" ,
                             defaultString ) ;
-            System.out.println("Selection : "+response);
+            _logger.debug("Selection : "+response);
             if( response == null )return ;
             response = response.trim() ;
             if( response.equals("") || response.equals(defaultString) )return ;
@@ -1001,7 +1003,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             Iterator it = System.getProperties().entrySet().iterator() ;
             while( it.hasNext() ){
                 Map.Entry e = (Map.Entry)it.next() ;
-                System.out.println(e.getKey()+ " -> "+e.getValue() ) ;
+                _logger.debug(e.getKey()+ " -> "+e.getValue() ) ;
             }
 
         }
@@ -1061,7 +1063,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                             setVisible(false) ;
                         }
                         public void windowActivated( WindowEvent e ){
-                            //System.err.println("Window activated");
+                            //_logger.error("Window activated");
                         }
                     }
             );
