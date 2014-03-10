@@ -17,7 +17,7 @@ SSHD=${OUR_HOME}/classes/sshd-core-0.8.0.jar
 MINACORE=${OUR_HOME}/classes/mina-core-2.0.4.jar
 SLF4J=${OUR_HOME}/classes/slf4j-api-1.7.6.jar
 LOGBACKCLASSIC=${OUR_HOME}/classes/logback-classic-1.1.1.jar
-LOGBACKXML=${OUR_HOME}/scripts/logback.xml
+#LOGBACKXML=${OUR_HOME}/scripts/logback.xml
 LOGBACKCORE=${OUR_HOME}/classes/logback-core-1.1.1.jar
 LOG4J=${OUR_HOME}/classes/log4j-over-slf4j-1.7.6.jar
 BCPROV=${OUR_HOME}/classes/bcprov-jdk16-140.jar
@@ -35,7 +35,6 @@ problem (){
 #   compile our stuff
 #
 #
-THISVERSION=2.0
 if [ -f $VERSIONFILE ] ; then
   THISVERSION=`cat ${VERSIONFILE}`
 fi
@@ -97,7 +96,7 @@ if [ -d "${EXTRAS}" ] ; then cp ${EXTRAS}/* ${DIST} ; fi
 #
 jarName=org.pcells
 #
-printf "reating JAR ${jarName} ... "
+printf "Creating JAR ${jarName} ... "
 jar cmf ${jobs}/manifest.${jarName} ${DIST}/${jarName}.jar  org/pcells/util/*.class \
           images/sheep*.png \
           images/cells-logo.jpg \

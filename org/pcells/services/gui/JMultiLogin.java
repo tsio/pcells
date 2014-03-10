@@ -1003,7 +1003,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             Iterator it = System.getProperties().entrySet().iterator() ;
             while( it.hasNext() ){
                 Map.Entry e = (Map.Entry)it.next() ;
-                _logger.debug(e.getKey()+ " -> "+e.getValue() ) ;
+                _logger.debug(e.getKey() + " -> " + e.getValue()) ;
             }
 
         }
@@ -1241,16 +1241,18 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             }
         }
         private class JConsoleFrame extends JFrame implements ActionListener {
-            private JTextArea   _text       = new JTextArea();
-            private JScrollPane _scrollPane = null ;
-            private JCheckBox   _showOUT    = new JCheckBox("Show DEBUG output");
-            private JCheckBox   _showERR    = new JCheckBox("Show ERROR output");
-            private JButton     _clear      = new CellGuiSkinHelper.CellButton("Clear Screen");
-            private JPanel      _master     = null ;
+            private JTextArea    _text       = new JTextArea();
+            private JScrollPane  _scrollPane = null ;
+            private ButtonGroup  _loggingRadioButtons = new ButtonGroup();
+            private JRadioButton _showOUT    = new JRadioButton("Show DEBUG output");
+            private JRadioButton _showERR    = new JRadioButton("Show ERROR output");
+            private JButton      _clear      = new CellGuiSkinHelper.CellButton("Clear Screen");
+            private JPanel       _master     = null ;
             private JConsoleFrame(String title ){
                 super(title);
-                _showOUT.setSelected(false);
                 _showERR.setSelected(true);
+                _showERR.addActionListener(this);
+                _showOUT.addActionListener(this);
 
                 _master = new CellGuiSkinHelper.CellPanel( new BorderLayout(4,4) ) ;
                 _master.setBorder( new CellBorder( "Console" , 30 ) ) ;
@@ -1261,6 +1263,8 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                 CellGuiSkinHelper.setComponentProperties( _showERR ) ;
 
                 JPanel south = new CellGuiSkinHelper.CellPanel(new FlowLayout()) ;
+                _loggingRadioButtons.add(_showERR);
+                _loggingRadioButtons.add(_showOUT);
                 south.add(_showOUT) ;
                 south.add(_showERR);
                 south.add(_clear);
@@ -1281,8 +1285,6 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                         }
                 );
                 _clear.addActionListener(this);
-
-
             }
 
             public void setLoggingLevel(Level level) {
@@ -1290,22 +1292,41 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                 root.setLevel(level);
             }
 
+            public String getLoggingLevel() {
+                Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+                return root.getLevel().toString();
+            }
+
             public void actionPerformed( ActionEvent event ){
                 Object source = event.getSource() ;
+                _logger.debug("Class ActionListener with source: {}", source);
                 if( source == _clear ){
                     _text.setText("");
                 }
+                if (_showERR.isSelected()) {
+                    System.out.println("Error out selected.");
+                    _logger.error("Logging Level is: {}", getLoggingLevel());
+                    setLoggingLevel(Level.ERROR);
+                    _logger.error("Logging level set to {}", getLoggingLevel());
+                }
+                if (_showOUT.isSelected()) {
+                    System.out.println("DEBUG out selected.");
+                    _logger.error("Logging Level is: {}", getLoggingLevel());
+                    setLoggingLevel(Level.DEBUG);
+                    _logger.debug("Logging level set to {}", getLoggingLevel());
+                }
             }
+
             private void appendStdout( String text ){
                 if(_showOUT.isSelected()) {
+                    _logger.debug("Printing DEBUG output: {}", text);
                     append(text);
-                    setLoggingLevel(Level.DEBUG);
                 }
             }
             private void appendStderr( String text ){
                 if(_showERR.isSelected()) {
+                    _logger.error("Printing ERROR output: {}", text);
                     append(text);
-                    setLoggingLevel(Level.ERROR);
                 }
             }
 
@@ -1323,6 +1344,7 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                 ) ;
             }
         }
+
         private JConsoleFrame _console  = null ;
         private String _title    = null ;
         private int    _width    = 600 ;
@@ -1392,11 +1414,5 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
     }
     public static void main(String argv[]) throws Exception  {
         JMultiLogin f = new JMultiLogin("Cell Login" , argv );
-        f.setLoggingLevel(Level.ERROR);
-    }
-
-    private void setLoggingLevel(Level level) {
-        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        root.setLevel(level);
     }
 }
