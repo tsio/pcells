@@ -4,6 +4,7 @@ package org.pcells.services.gui ;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.core.Appender;
 import dmg.util.Logable;
 import org.pcells.services.gui.util.DrawBoardFrame;
 import org.pcells.util.CellGuiClassLoader;
@@ -1290,6 +1291,13 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
             public void setLoggingLevel(Level level) {
                 Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
                 root.setLevel(level);
+
+                Iterator appenderIterator = root.iteratorForAppenders();
+                while (appenderIterator.hasNext()) {
+                    Appender next = (Appender)appenderIterator.next();
+                    _logger.debug("Appender: {}", next.getName());
+                }
+
             }
 
             public String getLoggingLevel() {
@@ -1304,13 +1312,11 @@ public class JMultiLogin extends JFrame implements ActionListener, MenuListener 
                     _text.setText("");
                 }
                 if (_showERR.isSelected()) {
-                    System.out.println("Error out selected.");
-                    _logger.error("Logging Level is: {}", getLoggingLevel());
+                    _logger.debug("Logging Level is: {}", getLoggingLevel());
                     setLoggingLevel(Level.ERROR);
                     _logger.error("Logging level set to {}", getLoggingLevel());
                 }
                 if (_showOUT.isSelected()) {
-                    System.out.println("DEBUG out selected.");
                     _logger.error("Logging Level is: {}", getLoggingLevel());
                     setLoggingLevel(Level.DEBUG);
                     _logger.debug("Logging level set to {}", getLoggingLevel());
