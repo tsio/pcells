@@ -1,17 +1,6 @@
 pcells
 ======
 
-Watch out. The current ssh2 version of pcells does not work. It is under development.
-
-This is the dCache administration GUI pcells. For this to work at the moment you need to checkout the branch
-
-    ssh2Server_binaryMode 
-
-of my fork of dCache: 
-
-    git@github.com:chrber/dcache.git
-    
-This branch contains the binary mode in the ssh2 admin interface.
 
 Building
 -------------------------
